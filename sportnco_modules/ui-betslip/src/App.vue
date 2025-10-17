@@ -39,28 +39,34 @@
   };
 
   onMounted(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const finalWsUrl = props.wsUrl || `${protocol}//localhost:3000`;
-    console.log(props.wsUrl)
+    // The WebSocket URL is determined in the following order:
+    // 1. The `ws-url` prop passed to the component.
+    // 2. The `VITE_WS_URL` environment variable (for production builds).
+    const finalWsUrl = props.wsUrl || import.meta.env.VITE_WS_URL;
 
-    socket = new WebSocket(finalWsUrl);
+    if (finalWsUrl) {
+      console.log(`Connecting to WebSocket at ${finalWsUrl}`);
+      socket = new WebSocket(finalWsUrl);
 
-    socket.addEventListener('open', () => {
-      console.log(`Betslip component connected to WebSocket at ${finalWsUrl}`);
-      isSocketReady.value = true;
-    });
+      socket.addEventListener('open', () => {
+        console.log(`Betslip component connected to WebSocket at ${finalWsUrl}`);
+        isSocketReady.value = true;
+      });
 
-    socket.addEventListener('close', () => {
-      console.log('Betslip component disconnected from WebSocket');
-      isSocketReady.value = false;
-    });
+      socket.addEventListener('close', () => {
+        console.log('Betslip component disconnected from WebSocket');
+        isSocketReady.value = false;
+      });
 
-    socket.addEventListener('message', (event) => {
-      const newCount = parseInt(event.data, 10);
-      if (!isNaN(newCount)) {
-        count.value = newCount;
-      }
-    });
+      socket.addEventListener('message', (event) => {
+        const newCount = parseInt(event.data, 10);
+        if (!isNaN(newCount)) {
+          count.value = newCount;
+        }
+      });
+    } else {
+      console.error('Error: WebSocket URL is not defined. Please provide it via the "ws-url" attribute or set the VITE_WS_URL environment variable.');
+    }
   });
 
   onUnmounted(() => {

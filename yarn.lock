@@ -4179,11 +4179,11 @@ __metadata:
 
 "@sportnco/ui-betslip@file:./sportnco_modules/ui-betslip::locator=nuxt-starter%40workspace%3A.":
   version: 0.0.0
-  resolution: "@sportnco/ui-betslip@file:./sportnco_modules/ui-betslip#./sportnco_modules/ui-betslip::hash=c55932&locator=nuxt-starter%40workspace%3A."
+  resolution: "@sportnco/ui-betslip@file:./sportnco_modules/ui-betslip#./sportnco_modules/ui-betslip::hash=9848af&locator=nuxt-starter%40workspace%3A."
   dependencies:
     pinia: "npm:^3.0.3"
     vue: "npm:^3.5.22"
-  checksum: 10c0/2a8566e1354f4cc414d5ee4b6b7ec45942f3b16dd0842ec8c7a7f7c683bbf2dc0b9ffc7db7b79714c567ded080e2f6230d8396641b02b5c005b53916c4c060d1
+  checksum: 10c0/5c6ed02de8eb85d888134e0f93340f4f84d0ce3eeaa5ab5b28741266ca5a77ff8de4c1732f14730f17142acf7cef5be33c41d43f7eb2c0311981b1f279fc2a3d
   languageName: node
   linkType: hard
 
