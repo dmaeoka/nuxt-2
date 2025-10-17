@@ -17,7 +17,10 @@ if (!customElements.get('betslip-component')) {
 if (typeof window !== 'undefined') {
   const mountElement = document.getElementById('betslip')
   if (mountElement) {
-    const app = createApp(App)
+    const props = {
+      wsUrl: mountElement.getAttribute('data-ws-url')
+    }
+    const app = createApp(App, props)
     app.mount('#betslip')
   }
 }
@@ -25,10 +28,10 @@ if (typeof window !== 'undefined') {
 // Expose a global mount function for manual initialization
 if (typeof window !== 'undefined') {
   ;(window as any).UiBetslip = {
-    mount(selector: string) {
+    mount(selector: string, props?: Record<string, any>) {
       const element = document.querySelector(selector)
       if (element) {
-        const app = createApp(App)
+        const app = createApp(App, props)
         app.mount(element)
       }
     },

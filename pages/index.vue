@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div>
-      <betslip-component></betslip-component>
+      <betslip-component :ws-url="$config.wsUrl"></betslip-component>
     </div>
   </div>
 </template>

@@ -25,7 +25,7 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
-    { src: '~/plugins/betslip-component.client.js', mode: 'client' },
+    { src: '~/plugins/betslip-component.client.js', mode: 'client' }
   ],
 
   // Auto import components: https://gonuxtjs.dev/config-components
@@ -39,25 +39,23 @@ export default {
   modules: [
   ],
 
-  // Build Configuration: https://gonuxtjs.dev/config-build
   build: {
-    // FIX 1 (Remains): Transpiling modules that rely on crypto.
+    // FIX 1: Transpiling modules that rely on crypto.
     transpile: [
-      '@sportnco/ui-betslip',
-      'uncrypto',
-      'unenv'
+      '@sportnco/ui-betslip'
     ],
   },
 
-  // FIX 2 (Remains): Explicitly mark Node built-in modules as external for the server build.
-  vite: {
-    build: {
-      rollupOptions: {
-        // This forces Rollup (used by Nitro/Nuxt Bridge) to ignore bundling
-        // these modules, relying on the Node runtime, which fixes the CJS/ESM
-        // default export conflict for internal Node APIs.
-        external: ['node:crypto', 'crypto'],
-      },
-    },
+  serverMiddleware: [
+    '~/server-middleware/websocket.js'
+  ],
+
+  server: {
+    host: 'nuxt.local.int.sportnco.com',
+    port: 3000
+  },
+
+  publicRuntimeConfig: {
+    wsUrl: process.env.WS_URL || 'ws://localhost:3000/ws'
   },
 }

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn --version)",
+      "Bash(node --version:*)",
+      "Bash(yarn install)",
+      "Bash(yarn npm info @nuxt/cli versions --json)",
+      "Bash(yarn build)",
+      "Bash(yarn npm info @nuxt/bridge@latest version)",
+      "Bash(npm run build:plugin:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
