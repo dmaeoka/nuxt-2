@@ -1,0 +1,9 @@
+{
+  "name": "@sportnco/uf-webservice",
+  "version": "1.0.0",
+  "description": "Unified Front Web Service client module for Nuxt.js",
+  "main": "module.js",
+  "repository": "https://git.sportnco.net/unified-fronts/uf-web-template-engine",
+  "author": "SportnCo",
+  "license": "UNLICENSED"
+}
