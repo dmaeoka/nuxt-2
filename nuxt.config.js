@@ -1,7 +1,7 @@
-// import { defineNuxtConfig } from '@nuxt/bridge'
+import { defineNuxtConfig } from '@nuxt/bridge'
 
-export default {
-  // bridge: true,
+export default defineNuxtConfig({
+  bridge: false,
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -44,6 +44,17 @@ export default {
     transpile: [
       '@sportnco/ui-betslip'
     ],
+
+    extend(config, { isClient }) {
+      // Extend only webpack config for client-bundle
+      if (isClient && process.env.NODE_ENV === 'production') {
+        config.plugins.push(
+          new (require('webpack').DefinePlugin)({
+            __VUE_PROD_DEVTOOLS__: false
+          })
+        );
+      }
+    }
   },
 
   serverMiddleware: [
@@ -51,11 +62,11 @@ export default {
   ],
 
   server: {
-    host: 'nuxt.local.int.sportnco.com',
+    host: '0.0.0.0',
     port: 3000
   },
 
   publicRuntimeConfig: {
-    wsUrl: process.env.WS_URL || 'ws://localhost:3000/ws'
-  },
-}
+    wsUrl: process.env.WS_URL || 'ws://localhost:3000'
+  }
+})

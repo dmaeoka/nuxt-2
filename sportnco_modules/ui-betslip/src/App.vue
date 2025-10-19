@@ -1,17 +1,13 @@
 <template>
   <main class="bg-black p-4 lg:p-8 text-white">
-    <header class="text-3xl font-bold mb-8">
-      Nuxt Sportnco Betslip Module
-    </header>
 
-    <!-- Display the count value -->
+    <HelloWorld msg="Welcome to Your Nuxt Sportnco Betslip Module!" />
+
     <div class="mb-4 p-4 bg-gray-800 rounded-lg">
       <p class="text-xl">
         Count from Test.vue: <strong class="text-green-400">{{ count ?? 0 }}</strong>
       </p>
     </div>
-
-    <HelloWorld msg="Welcome to Your Nuxt Sportnco Betslip Module!" />
 
     <button @click="incrementFromBetslip" :disabled="!isSocketReady" class="increment-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
       Increment from Betslip
@@ -39,9 +35,6 @@
   };
 
   onMounted(() => {
-    // The WebSocket URL is determined in the following order:
-    // 1. The `ws-url` prop passed to the component.
-    // 2. The `VITE_WS_URL` environment variable (for production builds).
     const finalWsUrl = props.wsUrl || import.meta.env.VITE_WS_URL;
 
     if (finalWsUrl) {

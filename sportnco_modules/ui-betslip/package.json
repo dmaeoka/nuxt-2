@@ -10,6 +10,8 @@
       "import": "./dist/plugin/ui-betslip.es.js",
       "require": "./dist/plugin/ui-betslip.umd.js"
     },
+    "./dist/plugin/ui-betslip.umd.js": "./dist/plugin/ui-betslip.umd.js",
+    "./dist/plugin/ui-betslip.es.js": "./dist/plugin/ui-betslip.es.js",
     "./standalone": "./dist/standalone/ui-betslip-standalone.iife.js"
   },
   "files": [
@@ -58,6 +60,7 @@
     "typescript": "~5.9.0",
     "vite": "^7.1.7",
     "vite-plugin-vue-devtools": "^8.0.2",
+    "vue-eslint-parser": "^10.0.0",
     "vue-tsc": "^3.1.0"
   },
   "volta": {
