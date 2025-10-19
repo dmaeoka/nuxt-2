@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "sportnco_modules/*"
+    "sportnco_modules/hooper",
+    "sportnco_modules/uf-webservice",
+    "sportnco_modules/ui-betslip"
   ],
   "scripts": {
     "dev": "nuxt2 dev",
@@ -14,10 +16,8 @@
   "dependencies": {
     "@sportnco/hooper": "./sportnco_modules/hooper",
     "@sportnco/uf-webservice": "./sportnco_modules/uf-webservice",
-    "@sportnco/ui-betslip": "./sportnco_modules/ui-betslip",
     "core-js": "^3.46.0",
-    "nuxt": "2.18.1",
-    "ws": "^8.18.3"
+    "nuxt": "2.18.1"
   },
   "devDependencies": {
     "@nuxt/bridge": "^3.6.1",

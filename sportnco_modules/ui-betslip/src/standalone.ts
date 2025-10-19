@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
   const mountElement = document.getElementById('betslip')
   if (mountElement) {
     const props = {
-      wsUrl: mountElement.getAttribute('data-ws-url')
+      apiUrl: mountElement.getAttribute('data-api-url') || ''
     }
     const app = createApp(App, props)
     app.mount('#betslip')
