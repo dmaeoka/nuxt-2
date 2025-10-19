@@ -29,7 +29,7 @@
 export default {
   data() {
     return {
-      apiUrl: process.env.API_URL || '',
+      apiUrl: '',
       availableBets: [
         { id: '1', name: 'Team A to Win', odds: 2.5 },
         { id: '2', name: 'Team B to Win', odds: 1.8 },
@@ -49,7 +49,7 @@ export default {
           body: JSON.stringify({
             bet: {
               ...bet,
-              stake: 10 // Default stake
+              stake: 10
             }
           })
         })

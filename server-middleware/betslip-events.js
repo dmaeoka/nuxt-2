@@ -28,17 +28,29 @@ export default function (req, res, next) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no' // Disable buffering for nginx
     })
+
+    // Ensure response is writable
+    res.flushHeaders()
 
     clients.push(res)
     log(`Active connections: ${clients.length}`)
 
     // Send current state immediately
-    res.write(`data: ${JSON.stringify(betslipState)}\n\n`)
+    const initialData = `data: ${JSON.stringify(betslipState)}\n\n`
+    log(`Sending initial state: ${initialData.substring(0, 100)}...`)
+    res.write(initialData)
+
+    // Send a heartbeat every 15 seconds to keep connection alive
+    const heartbeat = setInterval(() => {
+      res.write(':heartbeat\n\n')
+    }, 15000)
 
     // Handle disconnect
     req.on('close', () => {
+      clearInterval(heartbeat)
       const index = clients.indexOf(res)
       if (index !== -1) {
         clients.splice(index, 1)
