@@ -1,6 +1,3 @@
-// SSE-based Real-time Betslip Synchronization
-// Based on the betslip_sync_guide.md implementation
-
 const clients = []
 let betslipState = {
   bets: [],
@@ -22,26 +19,41 @@ export default function (req, res, next) {
 
   // SSE Stream endpoint
   if (req.url === '/api/betslip/stream' && req.method === 'GET') {
-    log('New SSE connection established')
+    log('🔌 New SSE connection established')
+    log('Request headers:', req.headers)
 
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'X-Accel-Buffering': 'no'
-    })
+    // Set response headers
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache, no-transform')
+    res.setHeader('Connection', 'keep-alive')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('X-Accel-Buffering', 'no')
+    // Disable compression for this route
+    res.setHeader('Content-Encoding', 'identity')
 
-    // Ensure response is writable
+    // Send headers immediately
     res.flushHeaders()
+    log('✅ Headers sent')
+
+    // Send initial comment to establish stream
+    res.write(':connected\n\n')
+    log('✅ Connection comment sent')
 
     clients.push(res)
     log(`Active connections: ${clients.length}`)
 
-    // Send current state immediately
-    const initialData = `data: ${JSON.stringify(betslipState)}\n\n`
-    log(`Sending initial state: ${initialData.substring(0, 100)}...`)
-    res.write(initialData)
+    // Send current state immediately after a tiny delay to ensure stream is ready
+    setImmediate(() => {
+      const initialData = `data: ${JSON.stringify(betslipState)}\n\n`
+      log(`Sending initial state: ${initialData.substring(0, 100)}...`)
+      try {
+        res.write(initialData)
+        log('✅ Initial state written to stream')
+      } catch (e) {
+        log('❌ Failed to write initial state:', e.message)
+      }
+    })
 
     // Send a heartbeat every 15 seconds to keep connection alive
     const heartbeat = setInterval(() => {

@@ -26,7 +26,25 @@ export default defineConfig({
   define: {
     'process.env.NODE_ENV': JSON.stringify(isStandalone ? 'production' : process.env.NODE_ENV || 'production'),
   },
-  build: {
+  build: isStandalone ? {
+    // Standalone IIFE build for use in HTML files
+    outDir: 'dist/standalone',
+    lib: {
+      entry: fileURLToPath(new URL('./src/custom-element.ts', import.meta.url)),
+      name: 'BetslipWidget',
+      formats: ['iife'],
+      fileName: () => 'betslip-widget.iife.js'
+    },
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      }
+    },
+    cssCodeSplit: false,
+    minify: 'terser'
+  } : {
+    // Plugin build for bundler integration (ES + UMD)
+    outDir: 'dist/plugin',
     lib: {
       entry: fileURLToPath(new URL('./src/custom-element.ts', import.meta.url)),
       name: 'BetslipWidget',
@@ -36,3 +54,4 @@ export default defineConfig({
     cssCodeSplit: false
   }
 })
+

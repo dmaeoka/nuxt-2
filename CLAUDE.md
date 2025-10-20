@@ -15,7 +15,7 @@ This is a Nuxt 2 application using Yarn workspaces with monorepo structure. The 
 # Install dependencies
 yarn install
 
-# Start dev server with hot reload (localhost:3000)
+# Start dev server with hot reload (localhost:5000)
 yarn dev
 
 # Build for production
@@ -36,9 +36,15 @@ The project uses Yarn workspaces with three local packages in `sportnco_modules/
 
 1. **@sportnco/ui-betslip** - Vue 3 betslip component with dual build targets
    - Plugin build: ES/UMD modules for integration (`dist/plugin/`)
-   - Standalone build: IIFE bundle for direct embedding (`dist/standalone/`)
+     - For use with bundlers (Webpack, Vite, etc.)
+     - Build: `npm run build:plugin`
+   - Standalone build: IIFE bundle for direct use in HTML (`dist/standalone/`)
+     - Single self-contained file with all dependencies inlined
+     - Can be used directly in `<script>` tags without a bundler
+     - Build: `npm run build:standalone`
+     - Example: See `sportnco_modules/ui-betslip/example-standalone.html`
+   - Build all: `npm run build` (runs type-check + both builds)
    - Uses Vite, Pinia, TailwindCSS v4
-   - Build command: `npm run build:plugin` or `npm run build:standalone` (run from ui-betslip directory)
 
 2. **@sportnco/hooper** - Vue 2 carousel slider component
 
@@ -81,7 +87,7 @@ Key configuration in `nuxt.config.js`:
 - **Client-only plugin**: Betslip component loads only on client side via `plugins/betslip-component.client.js`
 - **Transpilation**: `@sportnco/ui-betslip` is transpiled to ensure crypto polyfills work correctly
 - **Production optimization**: Vue devtools explicitly disabled in production client builds
-- **Server config**: Binds to `0.0.0.0:3000` for container compatibility
+- **Server config**: Binds to `0.0.0.0:5000` for container compatibility
 
 ## Working with ui-betslip Module
 
@@ -97,14 +103,26 @@ The ui-betslip module is a Vue 3 web component that implements a real-time synch
 
 **Development Workflow:**
 1. Isolated development: `yarn dev` from `sportnco_modules/ui-betslip/`
-2. Building: `npm run build` (runs both plugin and standalone builds + type checking)
-3. Integration: The main Nuxt app imports the built UMD bundle via `plugins/betslip-component.client.js`
+2. Building:
+   - `npm run build` - Builds both plugin and standalone versions
+   - `npm run build:plugin` - Build only ES/UMD modules (for bundler integration)
+   - `npm run build:standalone` - Build only IIFE bundle (for standalone HTML)
+3. Integration:
+   - Nuxt app: Imports from `dist/plugin/` via `plugins/betslip-widget.client.js`
+   - Standalone HTML: Include `dist/standalone/betslip-widget.iife.js` in `<script>` tag
+
+**Standalone HTML Usage:**
+```html
+<betslip-component api-url="http://localhost:5000"></betslip-component>
+<script src="path/to/betslip-widget.iife.js"></script>
+```
 
 **Important Notes:**
 - ui-betslip uses Vue 3 + Vite, main app uses Nuxt 2 (Vue 2)
 - After making changes to ui-betslip, rebuild before testing in Nuxt app
 - The component connects to `/api/betslip/stream` for real-time updates
 - All betslip state is managed server-side in `server-middleware/betslip-events.js`
+- Standalone IIFE build has all dependencies inlined (`inlineDynamicImports: true`)
 
 ## Key Technical Details
 
@@ -118,7 +136,7 @@ The ui-betslip module is a Vue 3 web component that implements a real-time synch
 ## Testing Real-Time Sync
 
 To test SSE betslip synchronization:
-1. Open `http://localhost:3000` in multiple browser windows
+1. Open `http://localhost:5000` in multiple browser windows
 2. Add/remove bets or update stakes in one window
 3. Changes appear instantly in all windows
 4. Check browser console for `[Betslip SSE]` and `[Betslip]` logs

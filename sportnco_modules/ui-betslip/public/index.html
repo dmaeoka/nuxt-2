@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UI Betslip - Standalone Demo</title>
-    <!-- The path is relative to this file, pointing to the build output -->
-    <link rel="stylesheet" href="./dist/standalone/ui-betslip-standalone.css">
     <style>
         body { font-family: sans-serif; padding: 2em; background-color: #f0f0f0; }
         h1, h2 { margin-top: 1em; border-bottom: 1px solid #ccc; padding-bottom: 0.5em; }
@@ -25,10 +23,14 @@
 
         <h2>Web Component usage:</h2>
         <p>This is the component used as a standard web component (<code>&lt;betslip-component&gt;</code>).</p>
-        <betslip-component ws-url="ws://localhost:3000"></betslip-component>
+        <betslip-component api-url="http://localhost:5000"></betslip-component>
 
-        <!-- The path is relative to this file, pointing to the build output -->
-        <script src="./ui-betslip-standalone.iife.js"></script>
+        <script src="./betslip-widget.iife.js"></script>
+        <script>
+          // The custom element is automatically registered by the IIFE bundle
+          // You can access it via window.BetslipWidget if needed
+          console.log('BetslipWidget loaded:', window.BetslipWidget);
+        </script>
     </div>
 </body>
 </html>

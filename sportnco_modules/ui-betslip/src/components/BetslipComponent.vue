@@ -104,7 +104,12 @@ const connectToBetslip = () => {
     console.log('[Betslip] EventSource object created:', eventSource)
     console.log('[Betslip] Initial readyState:', eventSource.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSED)')
 
-    // Listen to ALL events, not just 'message'
+    eventSource.addEventListener('open', () => {
+      isConnected.value = true
+      console.log('[Betslip] ✅ [open event] Connection established!')
+      console.log('[Betslip] ReadyState after open:', eventSource?.readyState)
+    })
+
     eventSource.addEventListener('message', (event) => {
       console.log('[Betslip] 📨 [message event] Received!')
       console.log('[Betslip] Event:', event)
@@ -118,12 +123,6 @@ const connectToBetslip = () => {
       } catch (error) {
         console.error('[Betslip] ❌ Parse error:', error)
       }
-    })
-
-    eventSource.addEventListener('open', () => {
-      isConnected.value = true
-      console.log('[Betslip] ✅ [open event] Connection established!')
-      console.log('[Betslip] ReadyState after open:', eventSource?.readyState)
     })
 
     eventSource.addEventListener('error', (error) => {
@@ -140,48 +139,6 @@ const connectToBetslip = () => {
         }, 3000)
       }
     })
-
-    // Also keep the old handlers for backward compatibility
-    eventSource.onopen = () => {
-      console.log('[Betslip] 🟢 onopen handler fired')
-    }
-
-    eventSource.onmessage = (event) => {
-      console.log('[Betslip] 📨 onmessage handler fired!')
-      console.log('[Betslip] Event type:', event.type)
-      console.log('[Betslip] Raw data:', event.data)
-
-      try {
-        const newState = JSON.parse(event.data)
-        console.log('[Betslip] ✅ Parsed state successfully:', JSON.stringify(newState, null, 2))
-        console.log('[Betslip] Number of bets:', newState.bets.length)
-
-        betslip.value = newState
-
-        console.log('[Betslip] ✅ Updated betslip reactive value')
-        console.log('[Betslip] Current betslip.value:', JSON.stringify(betslip.value, null, 2))
-      } catch (error) {
-        console.error('[Betslip] ❌ Failed to parse betslip state:', error)
-        console.error('[Betslip] Raw data that failed:', event.data)
-      }
-    }
-
-    eventSource.onerror = (error) => {
-      console.error('[Betslip] 🔴 onerror handler fired!')
-      console.error('[Betslip] Error:', error)
-      console.error('[Betslip] EventSource readyState:', eventSource?.readyState)
-
-      if (eventSource && eventSource.readyState === EventSource.CLOSED) {
-        console.log('[Betslip] Connection closed, reconnecting...')
-        isConnected.value = false
-
-        // Reconnect after 3 seconds
-        setTimeout(() => {
-          console.log('[Betslip] Attempting reconnection...')
-          connectToBetslip()
-        }, 3000)
-      }
-    }
 
     // Log any other event types we might receive
     console.log('[Betslip] EventSource created, readyState:', eventSource.readyState)

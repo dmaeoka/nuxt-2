@@ -6,20 +6,23 @@
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
-  "main": "./dist/betslip-widget.umd.js",
-  "module": "./dist/betslip-widget.es.js",
+  "main": "./dist/plugin/betslip-widget.umd.js",
+  "module": "./dist/plugin/betslip-widget.es.js",
   "exports": {
     ".": {
-      "import": "./dist/betslip-widget.es.js",
-      "require": "./dist/betslip-widget.umd.js"
-    }
+      "import": "./dist/plugin/betslip-widget.es.js",
+      "require": "./dist/plugin/betslip-widget.umd.js"
+    },
+    "./standalone": "./dist/standalone/betslip-widget.iife.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "npm run type-check && npm run build:plugin && npm run build:standalone",
+    "build:plugin": "vite build",
+    "build:standalone": "BUILD_MODE=standalone vite build",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
@@ -52,6 +55,7 @@
     "typescript": "~5.9.0",
     "vite": "^7.1.7",
     "vite-plugin-vue-devtools": "^8.0.2",
+    "vue-eslint-parser": "^10.0.0",
     "vue-tsc": "^3.1.0"
   },
   "volta": {

@@ -1,1 +1,1 @@
-import '~/sportnco_modules/ui-betslip/dist/betslip-widget.es.js'
+import '~/sportnco_modules/ui-betslip/dist/plugin/betslip-widget.es.js'

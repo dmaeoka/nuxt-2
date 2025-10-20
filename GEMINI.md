@@ -25,7 +25,7 @@ To get started with this project, follow these steps:
     ```bash
     yarn dev
     ```
-    This will start the Nuxt development server with hot reloading at `http://localhost:3000`.
+    This will start the Nuxt development server with hot reloading at `http://localhost:5000`.
 
 3.  **Build for Production:**
     ```bash
