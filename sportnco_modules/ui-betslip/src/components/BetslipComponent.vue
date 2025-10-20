@@ -1,18 +1,17 @@
 <template>
   <div class="border border-gray-200 rounded-lg p-4 bg-white font-sans max-w-md">
+
     <div class="mb-4">
       <h3 class="text-lg font-semibold m-0">Betslip ({{ betslip.bets.length }})</h3>
     </div>
-
     <div v-if="!isConnected" class="py-8 px-4 text-center text-gray-600">
       Connecting...
     </div>
-
     <div v-else-if="betslip.bets.length === 0" class="py-8 px-4 text-center text-gray-600">
       No bets added yet
     </div>
+    <div v-else class="space-y-2 text-gray-600">
 
-    <div v-else class="space-y-2">
       <div v-for="bet in betslip.bets" :key="bet.id" class="p-3 border border-gray-100 rounded-md mb-2 bg-gray-50">
         <div class="flex justify-between mb-2">
           <span class="font-medium">{{ bet.name }}</span>
@@ -22,7 +21,7 @@
           <input
             type="number"
             :value="bet.stake"
-            @input="updateStake(bet.id, parseFloat($event.target.value) || 0)"
+            @input="updateStake(bet.id, parseFloat(($event.target as HTMLInputElement)?.value) || 0)"
             class="flex-1 px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             min="0"
             step="0.01"
@@ -53,63 +52,145 @@
         <button @click="clearBetslip" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
       </div>
     </div>
+
+    <button @click="count++">You clicked me {{ count }} times.</button>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+interface Bet {
+  id: string
+  name: string
+  odds: number
+  stake: number
+}
+
+interface BetslipState {
+  bets: Bet[]
+  totalStake: number
+  potentialWin: number
+}
 
 const props = defineProps({
   apiUrl: {
     type: String,
-    default: 'http://localhost:3000'
+    default: ''
   }
 })
 
-const betslip = ref({
+const betslip = ref<BetslipState>({
   bets: [],
   totalStake: 0,
   potentialWin: 0
 })
 
+const count = ref(0)
 const isConnected = ref(false)
 const isSubmitting = ref(false)
-let eventSource = null
+
+let eventSource: EventSource | null = null
 
 const connectToBetslip = () => {
   try {
-    eventSource = new EventSource(`${props.apiUrl}/api/betslip/stream`)
+    const streamUrl = `${props.apiUrl}/api/betslip/stream`
+    console.log('[Betslip] 🔌 Attempting to connect to SSE stream...')
+    console.log('[Betslip] Stream URL:', streamUrl)
+    console.log('[Betslip] apiUrl prop value:', JSON.stringify(props.apiUrl))
+    console.log('[Betslip] Full constructed URL:', window.location.origin + streamUrl)
 
-    eventSource.onopen = () => {
+    eventSource = new EventSource(streamUrl)
+    console.log('[Betslip] EventSource object created:', eventSource)
+    console.log('[Betslip] Initial readyState:', eventSource.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSED)')
+
+    // Listen to ALL events, not just 'message'
+    eventSource.addEventListener('message', (event) => {
+      console.log('[Betslip] 📨 [message event] Received!')
+      console.log('[Betslip] Event:', event)
+      console.log('[Betslip] Data:', event.data)
+
+      try {
+        const newState = JSON.parse(event.data)
+        console.log('[Betslip] ✅ Parsed state:', JSON.stringify(newState, null, 2))
+        betslip.value = newState
+        console.log('[Betslip] ✅ Updated betslip.value')
+      } catch (error) {
+        console.error('[Betslip] ❌ Parse error:', error)
+      }
+    })
+
+    eventSource.addEventListener('open', () => {
       isConnected.value = true
-      console.log('Connected to betslip stream')
+      console.log('[Betslip] ✅ [open event] Connection established!')
+      console.log('[Betslip] ReadyState after open:', eventSource?.readyState)
+    })
+
+    eventSource.addEventListener('error', (error) => {
+      console.error('[Betslip] ❌ [error event] SSE error:', error)
+      console.error('[Betslip] EventSource readyState:', eventSource?.readyState)
+      console.error('[Betslip] EventSource url:', eventSource?.url)
+
+      if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+        console.log('[Betslip] Connection closed, will attempt reconnect...')
+        isConnected.value = false
+        setTimeout(() => {
+          console.log('[Betslip] 🔄 Attempting reconnection...')
+          connectToBetslip()
+        }, 3000)
+      }
+    })
+
+    // Also keep the old handlers for backward compatibility
+    eventSource.onopen = () => {
+      console.log('[Betslip] 🟢 onopen handler fired')
     }
 
     eventSource.onmessage = (event) => {
+      console.log('[Betslip] 📨 onmessage handler fired!')
+      console.log('[Betslip] Event type:', event.type)
+      console.log('[Betslip] Raw data:', event.data)
+
       try {
         const newState = JSON.parse(event.data)
+        console.log('[Betslip] ✅ Parsed state successfully:', JSON.stringify(newState, null, 2))
+        console.log('[Betslip] Number of bets:', newState.bets.length)
+
         betslip.value = newState
+
+        console.log('[Betslip] ✅ Updated betslip reactive value')
+        console.log('[Betslip] Current betslip.value:', JSON.stringify(betslip.value, null, 2))
       } catch (error) {
-        console.error('Failed to parse betslip state:', error)
+        console.error('[Betslip] ❌ Failed to parse betslip state:', error)
+        console.error('[Betslip] Raw data that failed:', event.data)
       }
     }
 
     eventSource.onerror = (error) => {
-      console.error('SSE error:', error)
-      isConnected.value = false
-      eventSource?.close()
+      console.error('[Betslip] 🔴 onerror handler fired!')
+      console.error('[Betslip] Error:', error)
+      console.error('[Betslip] EventSource readyState:', eventSource?.readyState)
 
-      // Reconnect after 3 seconds
-      setTimeout(() => {
-        connectToBetslip()
-      }, 3000)
+      if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+        console.log('[Betslip] Connection closed, reconnecting...')
+        isConnected.value = false
+
+        // Reconnect after 3 seconds
+        setTimeout(() => {
+          console.log('[Betslip] Attempting reconnection...')
+          connectToBetslip()
+        }, 3000)
+      }
     }
+
+    // Log any other event types we might receive
+    console.log('[Betslip] EventSource created, readyState:', eventSource.readyState)
   } catch (error) {
-    console.error('Failed to create EventSource:', error)
+    console.error('[Betslip] Failed to create EventSource:', error)
   }
 }
 
-const removeBet = async (betId) => {
+const removeBet = async (betId: string) => {
   try {
     await fetch(`${props.apiUrl}/api/betslip/remove`, {
       method: 'POST',
@@ -121,7 +202,7 @@ const removeBet = async (betId) => {
   }
 }
 
-const updateStake = async (betId, stake) => {
+const updateStake = async (betId: string, stake: number) => {
   try {
     await fetch(`${props.apiUrl}/api/betslip/update-stake`, {
       method: 'POST',
@@ -172,7 +253,7 @@ const clearBetslip = async () => {
 
 // Public API - exposed methods
 defineExpose({
-  addBet: async (bet) => {
+  addBet: async (bet: Bet) => {
     try {
       await fetch(`${props.apiUrl}/api/betslip/add`, {
         method: 'POST',
@@ -193,10 +274,9 @@ onMounted(() => {
   connectToBetslip()
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (eventSource) {
     eventSource.close()
   }
 })
 </script>
-

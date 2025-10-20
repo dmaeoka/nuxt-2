@@ -41,7 +41,7 @@ export default defineNuxtConfig({
   ],
 
   build: {
-    // FIX 1: Transpiling modules that rely on crypto.
+
     transpile: [
       '@sportnco/ui-betslip'
     ],

@@ -42,8 +42,9 @@ export default {
 
   methods: {
     async addToBetslip(bet) {
+      console.log('[Index Page] Adding bet to betslip:', bet)
       try {
-        await fetch(`${this.apiUrl}/api/betslip/add`, {
+        const response = await fetch(`${this.apiUrl}/api/betslip/add`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -53,8 +54,10 @@ export default {
             }
           })
         })
+        const result = await response.json()
+        console.log('[Index Page] ✅ Bet added successfully:', result)
       } catch (error) {
-        console.error('Failed to add bet:', error)
+        console.error('[Index Page] ❌ Failed to add bet:', error)
       }
     }
   }

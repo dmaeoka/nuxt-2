@@ -29,7 +29,7 @@ export default function (req, res, next) {
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*',
-      'X-Accel-Buffering': 'no' // Disable buffering for nginx
+      'X-Accel-Buffering': 'no'
     })
 
     // Ensure response is writable
@@ -64,13 +64,15 @@ export default function (req, res, next) {
   // Helper function to broadcast updates
   function broadcastToClients(state) {
     const message = `data: ${JSON.stringify(state)}\n\n`
-    log(`Broadcasting to ${clients.length} clients`)
+    log(`📡 Broadcasting to ${clients.length} clients`)
+    log(`📡 Message being sent:`, message.substring(0, 200))
 
     clients.forEach((client, index) => {
       try {
         client.write(message)
+        log(`✅ Sent to client ${index}`)
       } catch (e) {
-        log(`Failed to send to client ${index}:`, e.message)
+        log(`❌ Failed to send to client ${index}:`, e.message)
       }
     })
   }
@@ -107,9 +109,6 @@ export default function (req, res, next) {
         }
         else if (req.url === '/api/betslip/submit') {
           log('Submitting betslip:', betslipState)
-          // Handle submission logic
-          // Maybe call another service, save to DB, etc.
-          // For now, clear after submission
           betslipState.bets = []
         }
         else if (req.url === '/api/betslip/clear') {
