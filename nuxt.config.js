@@ -1,6 +1,7 @@
-import { defineNuxtConfig } from '@nuxt/bridge'
+// import { defineNuxtConfig } from '@nuxt/bridge'
 
-export default defineNuxtConfig({
+// export default defineNuxtConfig({
+export default {
   bridge: false,
   target: 'server',
 
@@ -66,4 +67,4 @@ export default defineNuxtConfig({
     host: '0.0.0.0',
     port: 5000
   }
-})
+}

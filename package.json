@@ -8,25 +8,20 @@
     "sportnco_modules/ui-betslip"
   ],
   "scripts": {
-    "dev": "nuxt2 dev",
-    "build": "nuxt2 build",
-    "start": "nuxt2 start",
-    "generate": "nuxt2 generate"
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
   },
   "dependencies": {
     "@sportnco/hooper": "./sportnco_modules/hooper",
     "@sportnco/uf-webservice": "./sportnco_modules/uf-webservice",
     "@sportnco/ui-betslip": "./sportnco_modules/ui-betslip",
     "core-js": "^3.46.0",
-    "nuxt": "2.18.1"
-  },
-  "devDependencies": {
-    "@nuxt/bridge": "^3.6.1",
-    "nuxi": "^3.29.3"
+    "nuxt": "^2.14.12"
   },
   "volta": {
-    "node": "22.20.0",
-    "yarn": "4.10.3"
-  },
-  "packageManager": "yarn@4.10.3"
+    "node": "14.21.3",
+    "yarn": "1.22.22"
+  }
 }

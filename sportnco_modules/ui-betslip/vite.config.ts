@@ -34,14 +34,7 @@ export default defineConfig({
       name: 'BetslipWidget',
       formats: ['iife'],
       fileName: () => 'betslip-widget.iife.js'
-    },
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      }
-    },
-    cssCodeSplit: false,
-    minify: 'terser'
+    }
   } : {
     // Plugin build for bundler integration (ES + UMD)
     outDir: 'dist/plugin',
@@ -54,4 +47,3 @@ export default defineConfig({
     cssCodeSplit: false
   }
 })
-
