@@ -23,17 +23,14 @@ export default function (req, res, next) {
     log('Request headers:', req.headers)
 
     // Set response headers
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/event-stream')
-    res.setHeader('Cache-Control', 'no-cache, no-transform')
-    res.setHeader('Connection', 'keep-alive')
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('X-Accel-Buffering', 'no')
-    // Disable compression for this route
-    res.setHeader('Content-Encoding', 'identity')
-
-    // Send headers immediately
-    res.flushHeaders()
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no',
+      'Content-Encoding': 'identity'
+    })
     log('✅ Headers sent')
 
     // Send initial comment to establish stream
