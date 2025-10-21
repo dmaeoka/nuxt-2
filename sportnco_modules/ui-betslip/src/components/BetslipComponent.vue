@@ -11,7 +11,6 @@
       No bets added yet
     </div>
     <div v-else class="space-y-2 text-gray-600">
-
       <div v-for="bet in betslip.bets" :key="bet.id" class="p-3 border border-gray-100 rounded-md mb-2 bg-gray-50">
         <div class="flex justify-between mb-2">
           <span class="font-medium">{{ bet.name }}</span>
@@ -95,29 +94,17 @@ let eventSource: EventSource | null = null
 const connectToBetslip = () => {
   try {
     const streamUrl = `${props.apiUrl}/api/betslip/stream`
-    console.log('[Betslip] 🔌 Attempting to connect to SSE stream...')
-    console.log('[Betslip] Stream URL:', streamUrl)
-    console.log('[Betslip] apiUrl prop value:', JSON.stringify(props.apiUrl))
-    console.log('[Betslip] Full constructed URL:', window.location.origin + streamUrl)
-
-    eventSource = new EventSource(streamUrl)
-    console.log('[Betslip] EventSource object created:', eventSource)
-    console.log('[Betslip] Initial readyState:', eventSource.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSED)')
-
+    console.log('[Betslip] 🔌 Connecting to:', streamUrl)
+    // EventSource with credentials to include cookies
+    eventSource = new EventSource(streamUrl, { withCredentials: true })
     eventSource.addEventListener('open', () => {
       isConnected.value = true
       console.log('[Betslip] ✅ [open event] Connection established!')
-      console.log('[Betslip] ReadyState after open:', eventSource?.readyState)
     })
 
     eventSource.addEventListener('message', (event) => {
-      console.log('[Betslip] 📨 [message event] Received!')
-      console.log('[Betslip] Event:', event)
-      console.log('[Betslip] Data:', event.data)
-
       try {
         const newState = JSON.parse(event.data)
-        console.log('[Betslip] ✅ Parsed state:', JSON.stringify(newState, null, 2))
         betslip.value = newState
         console.log('[Betslip] ✅ Updated betslip.value')
       } catch (error) {
@@ -127,8 +114,6 @@ const connectToBetslip = () => {
 
     eventSource.addEventListener('error', (error) => {
       console.error('[Betslip] ❌ [error event] SSE error:', error)
-      console.error('[Betslip] EventSource readyState:', eventSource?.readyState)
-      console.error('[Betslip] EventSource url:', eventSource?.url)
 
       if (eventSource && eventSource.readyState === EventSource.CLOSED) {
         console.log('[Betslip] Connection closed, will attempt reconnect...')
@@ -152,6 +137,7 @@ const removeBet = async (betId: string) => {
     await fetch(`${props.apiUrl}/api/betslip/remove`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ betId })
     })
   } catch (error) {
@@ -164,6 +150,7 @@ const updateStake = async (betId: string, stake: number) => {
     await fetch(`${props.apiUrl}/api/betslip/update-stake`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ betId, stake })
     })
   } catch (error) {
@@ -179,6 +166,7 @@ const submitBetslip = async () => {
     const response = await fetch(`${props.apiUrl}/api/betslip/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(betslip.value)
     })
 
@@ -201,6 +189,7 @@ const clearBetslip = async () => {
     await fetch(`${props.apiUrl}/api/betslip/clear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({})
     })
   } catch (error) {
@@ -215,6 +204,7 @@ defineExpose({
       await fetch(`${props.apiUrl}/api/betslip/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ bet })
       })
     } catch (error) {
