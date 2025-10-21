@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "sportnco_modules/hooper",
     "sportnco_modules/uf-webservice",
     "sportnco_modules/ui-betslip"
   ],
@@ -14,7 +13,6 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "@sportnco/hooper": "./sportnco_modules/hooper",
     "@sportnco/uf-webservice": "./sportnco_modules/uf-webservice",
     "@sportnco/ui-betslip": "./sportnco_modules/ui-betslip",
     "core-js": "^3.46.0",

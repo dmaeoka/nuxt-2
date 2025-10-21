@@ -99,16 +99,24 @@ class BetslipManager {
   }
 
   private extractSessionId(req: IncomingMessage): string | null {
+    // Try to get session ID from cookie first
     const cookieHeader = req.headers.cookie
-    let sessionId: string | null = null;
-
     if (cookieHeader) {
       const cookies = cookieHeader.split(';').map(c => c.trim())
       const sessionCookie = cookies.find(c => c.startsWith('betslip_session_id='))
       if (sessionCookie) {
         const sessionId = sessionCookie.split('=')[1]
         this.log('🍪 Found session ID in cookie:', sessionId)
+        return sessionId
       }
+    }
+
+    // Fallback to query parameter for backwards compatibility
+    const url = new URL(req.url || '', `http://${req.headers.host}`)
+    const sessionId = url.searchParams.get('sessionId')
+
+    if (sessionId) {
+      this.log('📎 Found session ID in query param:', sessionId)
     }
     return sessionId
   }
@@ -125,6 +133,7 @@ class BetslipManager {
 
   public handleSSEStream(req: IncomingMessage, res: ServerResponse): void {
     this.log('🔌 New SSE connection established')
+
     let sessionId = this.extractSessionId(req)
     const isNewSession = !sessionId
 
