@@ -7,21 +7,14 @@
 
     <div class="content">
       <div class="control-panel">
-        <h2>Send a Message</h2>
-        <p>Type a message and click send. It will be broadcast to all other tabs (like Domain B) via the iframe bridge below.</p>
-        <div class="input-group">
-          <input type="text" v-model="message" placeholder="Enter your message..." @keyup.enter="sendMessage" />
-          <button @click="sendMessage">Send</button>
+        <h2>Cross-Tab Ping Test</h2>
+        <p>Send a ping to other tabs and receive pong responses.</p>
+        <div>
+          <button class="btn" @click="sendPing">Send Ping</button>
         </div>
-        <p v-if="sentMessage" class="confirmation-message">
-          Sent: <strong>{{ sentMessage }}</strong>
+        <p v-if="pingStatus" class="status-message">
+          {{ pingStatus }}
         </p>
-      </div>
-
-      <div class="iframe-wrapper">
-        <h3>Bridge Iframe</h3>
-        <iframe src="/bridge" ref="bridgeIframe" @load="onIframeLoad" loading="lazy"></iframe>
-        <p>Status: <span :class="{ 'status-ready': isBridgeReady, 'status-loading': !isBridgeReady }">{{ bridgeStatus }}</span></p>
       </div>
     </div>
   </div>
@@ -29,130 +22,134 @@
 
 <script>
 export default {
-  data() {
+  head() {
     return {
-      message: 'Hello from Domain A!',
-      sentMessage: '',
-      isBridgeReady: false,
+      script: [
+        {
+          src: '/CrossTabMessenger.js',
+          body: true
+        }
+      ]
     };
   },
-  computed: {
-    bridgeStatus() {
-      return this.isBridgeReady ? 'Ready' : 'Loading...';
-    }
+  data() {
+    return {
+      pingStatus: '',
+    };
   },
   mounted() {
-    // Listen for status updates from the iframe (e.g., to know when it's ready)
-    window.addEventListener('message', this.handleIframeMessage);
-  },
-  beforeDestroy() {
-    window.removeEventListener('message', this.handleIframeMessage);
+    if (window.CrossTabMessenger) {
+      const bridgeUrl = `${window.location.origin}/bridge.html`;
+      window.CrossTabMessenger.init(bridgeUrl);
+
+      // Set up ping listener
+      window.CrossTabMessenger.onPing(() => {
+        this.pingStatus = 'Ping received';
+        console.log('[Domain A] Ping received');
+      });
+    }
   },
   methods: {
-    onIframeLoad() {
-      console.log('[Domain A] Bridge iframe has loaded.');
-      // The iframe will send a 'ready' message when its own JS has initialized.
+    sendPing() {
+      if (window.CrossTabMessenger) {
+        window.CrossTabMessenger.ping();
+        this.pingStatus = 'Ping sent 🚀';
+        console.log('[Domain A] Ping sent');
+      } else {
+        this.pingStatus = 'CrossTabMessenger not available';
+      }
     },
-    sendMessage() {
-      if (!this.message.trim()) {
-        alert('Please enter a message.');
-        return;
-      }
-      if (!this.isBridgeReady) {
-        alert('Bridge is not ready yet. Please wait a moment.');
-        return;
-      }
-
-      const iframe = this.$refs.bridgeIframe;
-      const messagePayload = {
-        text: this.message,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Send the message to the iframe
-      iframe.contentWindow.postMessage({
-        source: 'domain-app',
-        payload: messagePayload
-      }, '*'); // Use specific origin in production
-
-      console.log('[Domain A] Sent message to bridge iframe:', messagePayload);
-      this.sentMessage = this.message;
-      this.message = '';
-    },
-    handleIframeMessage(event) {
-      // We only care about status messages from the bridge on this page
-      const data = event.data;
-      if (data && data.source === 'bridge' && data.status === 'ready') {
-        this.isBridgeReady = true;
-        console.log('[Domain A] Received ready signal from bridge iframe.');
-      }
-    }
   }
 }
 </script>
 
 <style scoped>
-.domain-container {
-  font-family: sans-serif;
-  padding: 20px;
-  max-width: 800px;
-  margin: 40px auto;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
 header {
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
+  text-align: center;
 }
-h1 {
-  margin: 0 0 5px 0;
+
+header h1 {
+  margin: 0 0 0.5rem 0;
+  color: #667eea;
+  font-size: 2.5rem;
+  font-weight: 700;
 }
+
+header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
 .content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
 }
+
+.control-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
 .control-panel h2 {
-  margin-top: 0;
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
-.input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+
+.control-panel p {
+  margin: 0 0 1.5rem 0;
+  color: #64748b;
+  line-height: 1.6;
 }
-input {
-  flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #007bff;
+
+button.btn {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-radius: 4px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
 }
-button:hover {
-  background-color: #0056b3;
+
+button.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
-.confirmation-message {
-  font-style: italic;
-  color: #555;
+
+button.btn:active {
+  transform: translateY(0);
 }
-.iframe-wrapper {
-  border-top: 1px dashed #ccc;
-  padding-top: 20px;
+
+.status-message {
+  margin: 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-left: 4px solid #667eea;
+  border-radius: 6px;
+  color: #1e293b;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
 }
-iframe {
-  width: 100%;
-  height: 150px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.status-ready { font-weight: bold; color: #28a745; }
-.status-loading { font-style: italic; color: #6c757d; }
 </style>

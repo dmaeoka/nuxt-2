@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      "use strict";
+      (() => {
+        let fallbackPorts = [];
+
+        window.addEventListener("message", (e) => {
+          const { type } = e.data || {};
+          if (type === "ping") {
+            try {
+              localStorage.setItem("ping", Date.now().toString());
+            } catch {
+              fallbackPorts.forEach((p) => p.postMessage({ type: "ping" }));
+            }
+          } else if (type === "register-fallback") {
+            fallbackPorts.push({
+              postMessage: (msg) => window.parent.postMessage(msg, "*"),
+            });
+          }
+        });
+
+        try {
+          window.addEventListener("storage", (e) => {
+            if (e.key === "ping") {
+              window.parent.postMessage({ type: "ping" }, "*");
+            }
+          });
+          localStorage.setItem("_test", "1");
+          localStorage.removeItem("_test");
+        } catch {
+          console.warn("localStorage blocked, fallback mode only");
+        }
+      })();
+    </script>
+  </body>
+</html>

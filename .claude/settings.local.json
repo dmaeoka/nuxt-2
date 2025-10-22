@@ -59,7 +59,11 @@
       "Bash(yarn explain peer-requirements p9400f0)",
       "Bash(yarn run lint:eslint --help)",
       "Bash(yarn add uuid -W)",
-      "Bash(yarn add uuid)"
+      "Bash(yarn add uuid)",
+      "Bash(test:*)",
+      "Bash(corepack enable:*)",
+      "Bash(corepack install:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

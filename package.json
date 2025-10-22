@@ -16,8 +16,17 @@
     "@sportnco/uf-webservice": "./sportnco_modules/uf-webservice",
     "@sportnco/ui-betslip": "./sportnco_modules/ui-betslip",
     "core-js": "^3.46.0",
-    "nuxt": "^2.14.12"
+    "nuxt": "^2.14.12",
+    "vue": "^2.7.16",
+    "vue-server-renderer": "^2.7.16",
+    "vue-template-compiler": "^2.7.16"
   },
+  "resolutions": {
+    "nuxt-starter/vue": "^2.7.16",
+    "nuxt-starter/vue-server-renderer": "^2.7.16",
+    "nuxt-starter/vue-template-compiler": "^2.7.16"
+  },
+  "packageManager": "yarn@1.22.22",
   "volta": {
     "node": "14.21.3",
     "yarn": "1.22.22"

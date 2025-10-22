@@ -1,6 +1,5 @@
 <template>
   <div class="border border-gray-200 rounded-lg p-4 bg-white font-sans max-w-md">
-
     <div class="mb-4">
       <h3 class="text-lg font-semibold m-0">Betslip ({{ betslip.bets.length }})</h3>
     </div>
@@ -51,13 +50,16 @@
         <button @click="clearBetslip" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
       </div>
     </div>
-
     <button @click="count++">You clicked me {{ count }} times.</button>
+
+    <p class="mt-4 p-4 bg-purple-50 border-l-4 border-purple-600 rounded" v-if="status">
+      {{ status }}
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
 interface Bet {
   id: string
@@ -76,6 +78,10 @@ const props = defineProps({
   apiUrl: {
     type: String,
     default: ''
+  },
+  ping: {
+    type: String,
+    default: ''
   }
 })
 
@@ -88,8 +94,14 @@ const betslip = ref<BetslipState>({
 const count = ref(0)
 const isConnected = ref(false)
 const isSubmitting = ref(false)
+const status = ref(props.ping)
 
 let eventSource: EventSource | null = null
+
+// Watch for changes in the ping prop and update status
+watch(() => props.ping, (newPing) => {
+  status.value = newPing
+})
 
 const connectToBetslip = () => {
   try {
@@ -197,7 +209,6 @@ const clearBetslip = async () => {
   }
 }
 
-// Public API - exposed methods
 defineExpose({
   addBet: async (bet: Bet) => {
     try {
