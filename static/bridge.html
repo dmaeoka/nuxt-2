@@ -10,13 +10,18 @@
           const { type } = e.data || {};
           if (type === "ping") {
             try {
-              localStorage.setItem("ping", Date.now().toString());
-            } catch {
-              fallbackPorts.forEach((p) => p.postMessage({ type: "ping" }));
+              const timestamp = Date.now().toString();
+              localStorage.setItem("ping", timestamp);
+            } catch (err) {
+              fallbackPorts.forEach((p) => {
+                p.postMessage({ type: "ping" });
+              });
             }
           } else if (type === "register-fallback") {
             fallbackPorts.push({
-              postMessage: (msg) => window.parent.postMessage(msg, "*"),
+              postMessage: (msg) => {
+                window.parent.postMessage(msg, "*");
+              },
             });
           }
         });
@@ -29,8 +34,8 @@
           });
           localStorage.setItem("_test", "1");
           localStorage.removeItem("_test");
-        } catch {
-          console.warn("localStorage blocked, fallback mode only");
+        } catch (err) {
+          console.warn("[Bridge] localStorage blocked, fallback mode only. Error:", err);
         }
       })();
     </script>

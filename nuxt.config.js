@@ -27,7 +27,8 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
-    { src: '~/plugins/betslip-widget.client.js', mode: 'client' }
+    { src: '~/plugins/betslip-widget.client.js', mode: 'client' },
+    { src: '~/plugins/snc-worker', mode: 'client' },
   ],
 
   // Auto import components: https://gonuxtjs.dev/config-components

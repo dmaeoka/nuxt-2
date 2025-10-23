@@ -14,10 +14,6 @@
             Add to Betslip
           </button>
         </div>
-        <button class="btn" @click="sendPing">Send Ping</button>
-        <p v-if="pingStatus" class="status-message">
-          {{ pingStatus }}
-        </p>
       </div>
       <div class="betslip-section">
         <client-only>
@@ -83,15 +79,6 @@ export default {
         console.log('[Index Page] ✅ Bet added successfully:', result)
       } catch (error) {
         console.error('[Index Page] ❌ Failed to add bet:', error)
-      }
-    },
-    sendPing() {
-      if (window.CrossTabMessenger) {
-        window.CrossTabMessenger.ping();
-        this.pingStatus = 'Ping sent 🚀';
-        console.log('[Domain A] Ping sent');
-      } else {
-        this.pingStatus = 'CrossTabMessenger not available';
       }
     },
   }
@@ -161,36 +148,4 @@ h1 {
   background: #2563eb;
 }
 
-button.btn {
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  white-space: nowrap;
-}
-
-button.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-button.btn:active {
-  transform: translateY(0);
-}
-
-.status-message {
-  margin: 0;
-  padding: 1rem;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-left: 4px solid #667eea;
-  border-radius: 6px;
-  color: #1e293b;
-  font-weight: 500;
-  animation: slideIn 0.3s ease-out;
-}
 </style>

@@ -22,39 +22,25 @@
 
 <script>
 export default {
-  head() {
-    return {
-      script: [
-        {
-          src: '/CrossTabMessenger.js',
-          body: true
-        }
-      ]
-    };
-  },
   data() {
     return {
       pingStatus: '',
     };
   },
   mounted() {
-    if (window.CrossTabMessenger) {
-      const bridgeUrl = `${window.location.origin}/bridge.html`;
-      window.CrossTabMessenger.init(bridgeUrl);
-
-      // Set up ping listener
-      window.CrossTabMessenger.onPing(() => {
-        this.pingStatus = 'Ping received';
-        console.log('[Domain A] Ping received');
+    // Listen for ping messages from other tabs/domains
+    if (this.$SncWorker) {
+      this.$SncWorker.onPing(() => {
+        this.pingStatus = 'Ping received from other tab! 📨';
       });
     }
   },
   methods: {
     sendPing() {
-      if (window.CrossTabMessenger) {
-        window.CrossTabMessenger.ping();
+      if (this.$SncWorker) {
+        this.$SncWorker.ping();
         this.pingStatus = 'Ping sent 🚀';
-        console.log('[Domain A] Ping sent');
+        console.log('[Nuxt] Ping sent');
       } else {
         this.pingStatus = 'CrossTabMessenger not available';
       }

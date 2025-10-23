@@ -1,6 +1,8 @@
 class CrossTabMessenger {
   static init(bridgeUrl) {
-    if (this.initialized) return this;
+    if (this.initialized) {
+      return this;
+    }
     this.initialized = true;
 
     this.bridgeUrl = bridgeUrl;
@@ -12,15 +14,18 @@ class CrossTabMessenger {
     this.callbacks = { ping: [] };
 
     window.addEventListener("message", (e) => {
-      if (e.origin !== new URL(bridgeUrl).origin) return;
+      if (e.origin !== new URL(bridgeUrl).origin) {
+        return;
+      }
       const { type, origin } = e.data || {};
       if (type && this.callbacks[type]) {
         this.callbacks[type].forEach((fn) => fn(origin));
       }
     });
 
-    this.bridge.onload = () =>
+    this.bridge.onload = () => {
       this.postToBridge({ type: "register-fallback" });
+    };
 
     return this;
   }
