@@ -3,19 +3,9 @@
     <div class="max-w-4xl mx-auto">
       <h1 class="text-3xl font-bold mb-6 text-purple-700">Domain B (Receiver)</h1>
 
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Cross-Tab Ping Test</h2>
-        <button
-          @click="sendPing"
-          class="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5"
-        >
-          Send Ping
-        </button>
-      </div>
-
       <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-xl font-semibold mb-4">Betslip Development Preview</h2>
-        <BetslipComponent :api-url="apiUrl" :ping="status" />
+        <BetslipComponent ref="betslipRef" :api-url="apiUrl" :ping="receivedMessage" />
       </div>
     </div>
   </main>
@@ -24,20 +14,6 @@
 <style scoped></style>
 
 <script setup lang="ts">
-  interface CrossTabMessenger {
-    init: (bridgeUrl: string) => void;
-    ping: () => void;
-    pong: () => void;
-    onPing: (callback: () => void) => void;
-    onPong: (callback: (origin: string) => void) => void;
-  }
-
-  declare global {
-    interface Window {
-      CrossTabMessenger: CrossTabMessenger | undefined;
-    }
-  }
-
   import { ref, onMounted } from 'vue'
   import BetslipComponent from './components/BetslipComponent.vue'
 
@@ -48,6 +24,8 @@
 
   const apiUrl = props.apiUrl || import.meta.env.VITE_API_URL || ''
   const status = ref('')
+  const receivedMessage = ref('')
+  const betslipRef = ref<InstanceType<typeof BetslipComponent> | null>(null)
 
   onMounted(() => {
     // Load CrossTabMessenger script dynamically
@@ -61,20 +39,35 @@
     if (window.CrossTabMessenger) {
       window.CrossTabMessenger.init('http://192.168.112.156:5000/bridge.html')
 
+      // Listen for ping messages
       window.CrossTabMessenger.onPing(() => {
         status.value = 'Ping received'
         console.log('[Domain B] Ping received')
       })
-    }
-  }
 
-  function sendPing() {
-    if (window.CrossTabMessenger) {
-      window.CrossTabMessenger.ping()
-      status.value = 'Ping sent 🚀'
-      console.log('[Domain B] Ping sent')
-    } else {
-      status.value = 'CrossTabMessenger not available'
+      // Listen for addBet messages from the bridge
+      if (window.CrossTabMessenger.onMessage) {
+        window.CrossTabMessenger.onMessage('addBet', (data: unknown) => {
+          console.log('[Domain B] addBet message received:', data)
+          const betData = data as { bet?: { id: string; name: string; odds: number; stake: number } }
+          if (betslipRef.value && betData?.bet) {
+            betslipRef.value.addBet(betData.bet)
+            status.value = `Added ${betData.bet.name} from bridge! 🎯`
+            setTimeout(() => {
+              status.value = ''
+            }, 2000)
+          }
+        })
+
+        // Listen for custom messages
+        window.CrossTabMessenger.onMessage('customMessage', (data: unknown) => {
+          receivedMessage.value = JSON.stringify(data, null, 2)
+          status.value = 'Object received! 📦'
+          console.log('[Domain B] Custom message received:', data)
+        })
+      }
+
+      console.log('[Domain B] CrossTabMessenger initialized and listeners registered')
     }
   }
 </script>

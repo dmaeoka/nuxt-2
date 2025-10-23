@@ -17,9 +17,9 @@ class CrossTabMessenger {
       if (e.origin !== new URL(bridgeUrl).origin) {
         return;
       }
-      const { type, origin } = e.data || {};
+      const { type, data } = e.data || {};
       if (type && this.callbacks[type]) {
-        this.callbacks[type].forEach((fn) => fn(origin));
+        this.callbacks[type].forEach((fn) => fn(data));
       }
     });
 
@@ -40,6 +40,13 @@ class CrossTabMessenger {
 
   static onPing(fn) {
     this.callbacks.ping.push(fn);
+  }
+
+  static onMessage(messageType, fn) {
+    if (!this.callbacks[messageType]) {
+      this.callbacks[messageType] = [];
+    }
+    this.callbacks[messageType].push(fn);
   }
 }
 

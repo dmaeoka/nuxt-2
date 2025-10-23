@@ -17,7 +17,7 @@
       </div>
       <div class="betslip-section">
         <client-only>
-          <betslip-component :api-url="apiUrl"></betslip-component>
+          <betslip-component ref="betslipRef"></betslip-component>
         </client-only>
       </div>
     </div>
@@ -26,20 +26,11 @@
 
 <script>
 export default {
-  head() {
-    return {
-      script: [
-        {
-          src: '/CrossTabMessenger.js',
-          body: true
-        }
-      ]
-    };
-  },
   data() {
     return {
-      apiUrl: '',
+      bridgeUrl: '',
       pingStatus: '',
+      receivedBets: [],
       availableBets: [
         { id: '1', name: 'Team A to Win', odds: 2.5 },
         { id: '2', name: 'Team B to Win', odds: 1.8 },
@@ -50,35 +41,56 @@ export default {
     }
   },
   mounted() {
-    if (window.CrossTabMessenger) {
-      const bridgeUrl = `${window.location.origin}/bridge.html`;
-      window.CrossTabMessenger.init(bridgeUrl);
+    // Listen for ping messages from other tabs/domains
+    if (this.$SncWorker) {
+      this.$SncWorker.onPing(() => {
+        this.pingStatus = 'Ping received from other tab! 📨';
+      });
 
-      // Set up ping listener
-      window.CrossTabMessenger.onPing(() => {
-        this.pingStatus = 'Ping received';
-        console.log('[Domain A] Ping received');
+      // Listen for addBet messages from bridge
+      this.$SncWorker.onMessage('addBet', (data) => {
+        console.log('[Index Page] addBet message received from bridge:', data);
+        const betslipComponent = this.$refs.betslipRef;
+
+        if (betslipComponent && betslipComponent.addBet && data?.bet) {
+          betslipComponent.addBet(data.bet);
+          console.log('[Index Page] Bet added to local betslip from bridge:', data.bet);
+        }
+      });
+
+      // Listen for custom messages
+      this.$SncWorker.onMessage('customMessage', (data) => {
+        this.receivedMessage = JSON.stringify(data);
+        console.log('[Domain A] Custom message received:', data);
       });
     }
   },
   methods: {
-    async addToBetslip(bet) {
+    addToBetslip(bet) {
       console.log('[Index Page] Adding bet to betslip:', bet)
-      try {
-        const response = await fetch(`${this.apiUrl}/api/betslip/add`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bet: {
-              ...bet,
-              stake: 10
-            }
-          })
+
+      const betData = {
+        id: bet.id,
+        name: bet.name,
+        odds: bet.odds,
+        stake: 10 // Default stake
+      }
+
+      // Add to local betslip immediately
+      const betslipComponent = this.$refs.betslipRef
+      if (betslipComponent && betslipComponent.addBet) {
+        betslipComponent.addBet(betData)
+        console.log('[Index Page] Bet added to local betslip:', betData)
+      }
+
+      // Send bet through the bridge to all other tabs/domains
+      if (this.$SncWorker) {
+        this.$SncWorker.sendObject('addBet', {
+          bet: betData
         })
-        const result = await response.json()
-        console.log('[Index Page] ✅ Bet added successfully:', result)
-      } catch (error) {
-        console.error('[Index Page] ❌ Failed to add bet:', error)
+        console.log('[Index Page] Bet sent through bridge:', betData)
+      } else {
+        console.warn('[Index Page] SncWorker not available')
       }
     },
   }

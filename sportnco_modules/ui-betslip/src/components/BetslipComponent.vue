@@ -3,10 +3,7 @@
     <div class="mb-4">
       <h3 class="text-lg font-semibold m-0">Betslip ({{ betslip.bets.length }})</h3>
     </div>
-    <div v-if="!isConnected" class="py-8 px-4 text-center text-gray-600">
-      Connecting...
-    </div>
-    <div v-else-if="betslip.bets.length === 0" class="py-8 px-4 text-center text-gray-600">
+    <div v-if="betslip.bets.length === 0" class="py-8 px-4 text-center text-gray-600">
       No bets added yet
     </div>
     <div v-else class="space-y-2 text-gray-600">
@@ -50,16 +47,11 @@
         <button @click="clearBetslip" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
       </div>
     </div>
-    <button @click="count++">You clicked me {{ count }} times.</button>
-
-    <p class="mt-4 p-4 bg-purple-50 border-l-4 border-purple-600 rounded" v-if="status">
-      {{ status }}
-    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch } from 'vue'
 
 interface Bet {
   id: string
@@ -75,10 +67,6 @@ interface BetslipState {
 }
 
 const props = defineProps({
-  apiUrl: {
-    type: String,
-    default: ''
-  },
   ping: {
     type: String,
     default: ''
@@ -90,151 +78,141 @@ const betslip = ref<BetslipState>({
   totalStake: 0,
   potentialWin: 0
 })
-
-const count = ref(0)
-const isConnected = ref(false)
-const isSubmitting = ref(false)
 const status = ref(props.ping)
-
-let eventSource: EventSource | null = null
+const isSubmitting = ref(false)
 
 // Watch for changes in the ping prop and update status
 watch(() => props.ping, (newPing) => {
   status.value = newPing
 })
 
-const connectToBetslip = () => {
+// Calculate totals whenever bets change
+const calculateTotals = () => {
+  betslip.value.totalStake = betslip.value.bets.reduce((sum, bet) => sum + bet.stake, 0)
+  betslip.value.potentialWin = betslip.value.bets.reduce((sum, bet) => sum + (bet.stake * bet.odds), 0)
+}
+
+// Add a bet to the betslip
+const addBet = (bet: Bet) => {
   try {
-    const streamUrl = `${props.apiUrl}/api/betslip/stream`
-    console.log('[Betslip] 🔌 Connecting to:', streamUrl)
-    // EventSource with credentials to include cookies
-    eventSource = new EventSource(streamUrl, { withCredentials: true })
-    eventSource.addEventListener('open', () => {
-      isConnected.value = true
-      console.log('[Betslip] ✅ [open event] Connection established!')
-    })
+    // Check if bet already exists
+    const existingBet = betslip.value.bets.find(b => b.id === bet.id)
 
-    eventSource.addEventListener('message', (event) => {
-      try {
-        const newState = JSON.parse(event.data)
-        betslip.value = newState
-        console.log('[Betslip] ✅ Updated betslip.value')
-      } catch (error) {
-        console.error('[Betslip] ❌ Parse error:', error)
-      }
-    })
+    if (existingBet) {
+      // Update stake if bet already exists
+      existingBet.stake += bet.stake
+      console.log('[Betslip] Bet already exists, increased stake:', existingBet)
+    } else {
+      // Add new bet
+      betslip.value.bets.push({ ...bet })
+      console.log('[Betslip] Bet added:', bet)
+    }
 
-    eventSource.addEventListener('error', (error) => {
-      console.error('[Betslip] ❌ [error event] SSE error:', error)
+    calculateTotals()
+    status.value = `Added ${bet.name} to betslip`
 
-      if (eventSource && eventSource.readyState === EventSource.CLOSED) {
-        console.log('[Betslip] Connection closed, will attempt reconnect...')
-        isConnected.value = false
+    // Clear status after 2 seconds
+    setTimeout(() => {
+      status.value = ''
+    }, 2000)
+  } catch (error) {
+    console.error('[Betslip] Failed to add bet:', error)
+  }
+}
+
+// Update stake for a specific bet
+const updateStake = (betId: string, stake: number) => {
+  try {
+    const bet = betslip.value.bets.find(b => b.id === betId)
+
+    if (bet) {
+      bet.stake = stake
+      calculateTotals()
+      console.log('[Betslip] Stake updated for bet:', betId, 'new stake:', stake)
+    }
+  } catch (error) {
+    console.error('[Betslip] Failed to update stake:', error)
+  }
+}
+
+// Remove a bet from the betslip
+const removeBet = (betId: string) => {
+  try {
+    const index = betslip.value.bets.findIndex(b => b.id === betId)
+
+    if (index !== -1) {
+      const removedBet = betslip.value.bets.splice(index, 1)[0]
+      calculateTotals()
+      console.log('[Betslip] Bet removed:', removedBet)
+
+      if (removedBet) {
+        status.value = `Removed ${removedBet.name} from betslip`
         setTimeout(() => {
-          console.log('[Betslip] 🔄 Attempting reconnection...')
-          connectToBetslip()
-        }, 3000)
+          status.value = ''
+        }, 2000)
       }
-    })
-
-    // Log any other event types we might receive
-    console.log('[Betslip] EventSource created, readyState:', eventSource.readyState)
+    }
   } catch (error) {
-    console.error('[Betslip] Failed to create EventSource:', error)
+    console.error('[Betslip] Failed to remove bet:', error)
   }
 }
 
-const removeBet = async (betId: string) => {
-  try {
-    await fetch(`${props.apiUrl}/api/betslip/remove`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ betId })
-    })
-  } catch (error) {
-    console.error('Failed to remove bet:', error)
-  }
-}
-
-const updateStake = async (betId: string, stake: number) => {
-  try {
-    await fetch(`${props.apiUrl}/api/betslip/update-stake`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ betId, stake })
-    })
-  } catch (error) {
-    console.error('Failed to update stake:', error)
-  }
-}
-
-const submitBetslip = async () => {
-  if (isSubmitting.value) return
+// Submit the betslip
+const submitBetslip = () => {
+  if (betslip.value.bets.length === 0) return
 
   isSubmitting.value = true
-  try {
-    const response = await fetch(`${props.apiUrl}/api/betslip/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(betslip.value)
-    })
 
-    if (response.ok) {
-      await clearBetslip()
-      alert('Bet placed successfully!')
-    } else {
-      alert('Failed to place bet')
-    }
+  try {
+    console.log('[Betslip] Submitting betslip:', betslip.value)
+
+    // Simulate submission delay
+    setTimeout(() => {
+      status.value = `Betslip submitted successfully! Total stake: $${betslip.value.totalStake.toFixed(2)}, Potential win: $${betslip.value.potentialWin.toFixed(2)} ✅`
+
+      // Clear betslip after submission
+      betslip.value.bets = []
+      calculateTotals()
+      isSubmitting.value = false
+
+      // Clear status after 5 seconds
+      setTimeout(() => {
+        status.value = ''
+      }, 5000)
+    }, 500)
   } catch (error) {
-    console.error('Failed to submit betslip:', error)
-    alert('Failed to place bet')
-  } finally {
+    console.error('[Betslip] Failed to submit betslip:', error)
+    status.value = 'Failed to submit betslip ❌'
     isSubmitting.value = false
+
+    setTimeout(() => {
+      status.value = ''
+    }, 3000)
   }
 }
 
-const clearBetslip = async () => {
+// Clear all bets from the betslip
+const clearBetslip = () => {
   try {
-    await fetch(`${props.apiUrl}/api/betslip/clear`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({})
-    })
+    betslip.value.bets = []
+    calculateTotals()
+    console.log('[Betslip] Betslip cleared')
+
+    status.value = 'Betslip cleared'
+    setTimeout(() => {
+      status.value = ''
+    }, 2000)
   } catch (error) {
-    console.error('Failed to clear betslip:', error)
+    console.error('[Betslip] Failed to clear betslip:', error)
   }
 }
 
+// Expose methods so parent can call them
 defineExpose({
-  addBet: async (bet: Bet) => {
-    try {
-      await fetch(`${props.apiUrl}/api/betslip/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ bet })
-      })
-    } catch (error) {
-      console.error('Failed to add bet:', error)
-    }
-  },
+  addBet,
   removeBet,
   updateStake,
   submitBetslip,
   clearBetslip
-})
-
-onMounted(() => {
-  connectToBetslip()
-})
-
-onBeforeUnmount(() => {
-  if (eventSource) {
-    eventSource.close()
-  }
 })
 </script>

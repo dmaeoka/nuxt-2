@@ -61,7 +61,7 @@ export default {
   },
 
   serverMiddleware: [
-    '~/server-middleware/betslip-events.ts'
+    // '~/server-middleware/betslip-events.ts'
   ],
 
   server: {

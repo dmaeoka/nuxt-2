@@ -22,7 +22,6 @@ export default (context, inject) => {
       const bridgeUrl = `${window.location.origin}/bridge.html`;
       window.CrossTabMessenger.init(bridgeUrl);
       isReady = true;
-      // Execute any queued callbacks
       readyCallbacks.forEach(cb => cb());
       readyCallbacks.length = 0;
     }
@@ -46,6 +45,14 @@ export default (context, inject) => {
         console.warn('[SncWorker Plugin] CrossTabMessenger not available');
       }
     },
+    sendObject: (type, data) => {
+      if (process.client && window.CrossTabMessenger) {
+        window.CrossTabMessenger.postToBridge({ type, data });
+        console.log('[SncWorker Plugin] Object sent:', { type, data });
+      } else {
+        console.warn('[SncWorker Plugin] CrossTabMessenger not available');
+      }
+    },
     onMessage: (type, callback) => {
       whenReady(() => {
         if (process.client && window.CrossTabMessenger) {
@@ -53,6 +60,7 @@ export default (context, inject) => {
             window.CrossTabMessenger.callbacks[type] = [];
           }
           window.CrossTabMessenger.callbacks[type].push(callback);
+          console.log(`[SncWorker Plugin] Registered callback for type: ${type}`);
         }
       });
     },

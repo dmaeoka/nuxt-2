@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/diego.maeoka/Desktop/tutorials/starter/static/**)",
+      "Read(//Users/diego.maeoka/Desktop/tutorials/starter/pages/**)",
+      "Read(//Users/diego.maeoka/Desktop/tutorials/starter/plugins/**)",
+      "Read(//Users/diego.maeoka/Desktop/tutorials/starter/server-middleware/**)",
+      "Bash(npm run build:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "filesystem",
+    "chrome-devtools",
+    "git"
+  ]
+}

@@ -10,10 +10,13 @@
         <h2>Cross-Tab Ping Test</h2>
         <p>Send a ping to other tabs and receive pong responses.</p>
         <div>
-          <button class="btn" @click="sendPing">Send Ping</button>
+          <button class="btn" @click="sendCustomMessage">Send Custom Message</button>
         </div>
         <p v-if="pingStatus" class="status-message">
           {{ pingStatus }}
+        </p>
+        <p v-if="receivedMessage" class="status-message">
+          Received: {{ receivedMessage }}
         </p>
       </div>
     </div>
@@ -25,6 +28,7 @@ export default {
   data() {
     return {
       pingStatus: '',
+      receivedMessage: '',
     };
   },
   mounted() {
@@ -32,6 +36,12 @@ export default {
     if (this.$SncWorker) {
       this.$SncWorker.onPing(() => {
         this.pingStatus = 'Ping received from other tab! 📨';
+      });
+
+      // Listen for custom messages
+      this.$SncWorker.onMessage('customMessage', (data) => {
+        this.receivedMessage = JSON.stringify(data);
+        console.log('[Domain A] Custom message received:', data);
       });
     }
   },
@@ -41,6 +51,24 @@ export default {
         this.$SncWorker.ping();
         this.pingStatus = 'Ping sent 🚀';
         console.log('[Nuxt] Ping sent');
+      } else {
+        this.pingStatus = 'CrossTabMessenger not available';
+      }
+    },
+    sendCustomMessage() {
+      if (this.$SncWorker) {
+        const messageData = {
+          user: 'Domain A',
+          message: 'Hello from cross-tab!',
+          timestamp: Date.now(),
+          nested: {
+            foo: 'bar',
+            array: [1, 2, 3]
+          }
+        };
+        this.$SncWorker.sendObject('customMessage', messageData);
+        this.pingStatus = 'Custom message sent! 📤';
+        console.log('[Domain A] Sent custom message:', messageData);
       } else {
         this.pingStatus = 'CrossTabMessenger not available';
       }

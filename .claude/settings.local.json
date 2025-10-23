@@ -67,5 +67,10 @@
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "filesystem",
+    "chrome-devtools",
+    "git"
+  ]
 }

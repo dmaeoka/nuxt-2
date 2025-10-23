@@ -7,7 +7,7 @@
         let fallbackPorts = [];
 
         window.addEventListener("message", (e) => {
-          const { type } = e.data || {};
+          const { type, data } = e.data || {};
           if (type === "ping") {
             try {
               const timestamp = Date.now().toString();
@@ -23,6 +23,18 @@
                 window.parent.postMessage(msg, "*");
               },
             });
+          } else if (type === "addBet" || type === "customMessage") {
+            // Handle custom messages - store and broadcast
+            try {
+              const messageKey = `bridge_${type}`;
+              const messageData = JSON.stringify({ type, data, timestamp: Date.now() });
+              localStorage.setItem(messageKey, messageData);
+            } catch (err) {
+              // Fallback mode - broadcast directly
+              fallbackPorts.forEach((p) => {
+                p.postMessage({ type, data });
+              });
+            }
           }
         });
 
@@ -30,6 +42,14 @@
           window.addEventListener("storage", (e) => {
             if (e.key === "ping") {
               window.parent.postMessage({ type: "ping" }, "*");
+            } else if (e.key && e.key.startsWith("bridge_")) {
+              // Broadcast custom messages to all tabs
+              try {
+                const messageData = JSON.parse(e.newValue);
+                window.parent.postMessage(messageData, "*");
+              } catch (err) {
+                console.error("[Bridge] Failed to parse message:", err);
+              }
             }
           });
           localStorage.setItem("_test", "1");
