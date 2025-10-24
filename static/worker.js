@@ -1,4 +1,3 @@
-// SharedWorker: relays messages between all connected bridge iframes
 let connections = [];
 
 self.addEventListener('connect', function(event) {
@@ -13,13 +12,6 @@ self.addEventListener('connect', function(event) {
   port.start();
 
   console.log('New connection to shared worker:', connectionId, 'Total connections:', connections.length);
-
-  // Send initial connection confirmation
-  port.postMessage({
-    type: 'INITIAL_DATA',
-    connectionId: connectionId,
-    timestamp: new Date().toISOString()
-  });
 
   port.onmessage = function(event) {
     const message = event.data;
@@ -43,4 +35,4 @@ self.addEventListener('connect', function(event) {
     connections = connections.filter(conn => conn.id !== connectionId);
     console.log('Connection closed:', connectionId, 'Remaining connections:', connections.length);
   };
-});
+}, false);

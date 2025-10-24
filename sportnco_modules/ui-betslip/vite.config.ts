@@ -45,5 +45,8 @@ export default defineConfig({
       fileName: (format) => `betslip-widget.${format}.js`
     },
     cssCodeSplit: false
+  },
+  server: {
+    allowedHosts: true
   }
 })
