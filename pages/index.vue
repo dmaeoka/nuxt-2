@@ -58,12 +58,85 @@ export default {
         }
       });
 
+      // Listen for updateStake messages from bridge
+      this.$SncWorker.onMessage('updateStake', (data) => {
+        console.log('[Index Page] updateStake message received from bridge:', data);
+        const betslipComponent = this.$refs.betslipRef;
+
+        if (betslipComponent && betslipComponent.updateStake && data?.betId) {
+          betslipComponent.updateStake(data.betId, data.stake);
+          console.log('[Index Page] Stake updated in local betslip from bridge:', data);
+        }
+      });
+
+      // Listen for removeBet messages from bridge
+      this.$SncWorker.onMessage('removeBet', (data) => {
+        console.log('[Index Page] removeBet message received from bridge:', data);
+        const betslipComponent = this.$refs.betslipRef;
+
+        if (betslipComponent && betslipComponent.removeBet && data?.betId) {
+          betslipComponent.removeBet(data.betId);
+          console.log('[Index Page] Bet removed from local betslip from bridge:', data);
+        }
+      });
+
+      // Listen for submitBetslip messages from bridge
+      this.$SncWorker.onMessage('submitBetslip', (data) => {
+        console.log('[Index Page] submitBetslip message received from bridge:', data);
+        const betslipComponent = this.$refs.betslipRef;
+
+        if (betslipComponent && betslipComponent.submitBetslip) {
+          betslipComponent.submitBetslip();
+          console.log('[Index Page] Betslip submitted from bridge');
+        }
+      });
+
+      // Listen for clearBetslip messages from bridge
+      this.$SncWorker.onMessage('clearBetslip', (data) => {
+        console.log('[Index Page] clearBetslip message received from bridge:', data);
+        const betslipComponent = this.$refs.betslipRef;
+
+        if (betslipComponent && betslipComponent.clearBetslip) {
+          betslipComponent.clearBetslip();
+          console.log('[Index Page] Betslip cleared from bridge');
+        }
+      });
+
       // Listen for custom messages
       this.$SncWorker.onMessage('customMessage', (data) => {
         this.receivedMessage = JSON.stringify(data);
         console.log('[Domain A] Custom message received:', data);
       });
     }
+
+    // Listen for betslip component events and broadcast through bridge
+    window.addEventListener('betslip:updateStake', (e) => {
+      console.log('[Index Page] betslip:updateStake event:', e.detail);
+      if (this.$SncWorker) {
+        this.$SncWorker.sendObject('updateStake', e.detail);
+      }
+    });
+
+    window.addEventListener('betslip:removeBet', (e) => {
+      console.log('[Index Page] betslip:removeBet event:', e.detail);
+      if (this.$SncWorker) {
+        this.$SncWorker.sendObject('removeBet', e.detail);
+      }
+    });
+
+    window.addEventListener('betslip:submit', (e) => {
+      console.log('[Index Page] betslip:submit event:', e.detail);
+      if (this.$SncWorker) {
+        this.$SncWorker.sendObject('submitBetslip', e.detail);
+      }
+    });
+
+    window.addEventListener('betslip:clear', (e) => {
+      console.log('[Index Page] betslip:clear event:', e.detail);
+      if (this.$SncWorker) {
+        this.$SncWorker.sendObject('clearBetslip', e.detail);
+      }
+    });
   },
   methods: {
     addToBetslip(bet) {

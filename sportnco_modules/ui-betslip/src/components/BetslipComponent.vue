@@ -129,6 +129,11 @@ const updateStake = (betId: string, stake: number) => {
       bet.stake = stake
       calculateTotals()
       console.log('[Betslip] Stake updated for bet:', betId, 'new stake:', stake)
+
+      // Emit event to parent
+      window.dispatchEvent(new CustomEvent('betslip:updateStake', {
+        detail: { betId, stake }
+      }))
     }
   } catch (error) {
     console.error('[Betslip] Failed to update stake:', error)
@@ -150,6 +155,11 @@ const removeBet = (betId: string) => {
         setTimeout(() => {
           status.value = ''
         }, 2000)
+
+        // Emit event to parent
+        window.dispatchEvent(new CustomEvent('betslip:removeBet', {
+          detail: { betId }
+        }))
       }
     }
   } catch (error) {
@@ -169,6 +179,11 @@ const submitBetslip = () => {
     // Simulate submission delay
     setTimeout(() => {
       status.value = `Betslip submitted successfully! Total stake: $${betslip.value.totalStake.toFixed(2)}, Potential win: $${betslip.value.potentialWin.toFixed(2)} ✅`
+
+      // Emit event to parent before clearing
+      window.dispatchEvent(new CustomEvent('betslip:submit', {
+        detail: { betslip: { ...betslip.value } }
+      }))
 
       // Clear betslip after submission
       betslip.value.bets = []
@@ -202,6 +217,11 @@ const clearBetslip = () => {
     setTimeout(() => {
       status.value = ''
     }, 2000)
+
+    // Emit event to parent
+    window.dispatchEvent(new CustomEvent('betslip:clear', {
+      detail: {}
+    }))
   } catch (error) {
     console.error('[Betslip] Failed to clear betslip:', error)
   }

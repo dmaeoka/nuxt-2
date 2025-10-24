@@ -33,6 +33,35 @@
     script.src = 'http://192.168.112.156:5000/CrossTabMessenger.js'
     script.onload = () => initCrossTabMessenger()
     document.body.appendChild(script)
+
+    // Listen for betslip component events and broadcast through bridge
+    window.addEventListener('betslip:updateStake', (e: any) => {
+      console.log('[Domain B] betslip:updateStake event:', e.detail)
+      if (window.CrossTabMessenger) {
+        window.CrossTabMessenger.postToBridge({ type: 'updateStake', data: e.detail })
+      }
+    })
+
+    window.addEventListener('betslip:removeBet', (e: any) => {
+      console.log('[Domain B] betslip:removeBet event:', e.detail)
+      if (window.CrossTabMessenger) {
+        window.CrossTabMessenger.postToBridge({ type: 'removeBet', data: e.detail })
+      }
+    })
+
+    window.addEventListener('betslip:submit', (e: any) => {
+      console.log('[Domain B] betslip:submit event:', e.detail)
+      if (window.CrossTabMessenger) {
+        window.CrossTabMessenger.postToBridge({ type: 'submitBetslip', data: e.detail })
+      }
+    })
+
+    window.addEventListener('betslip:clear', (e: any) => {
+      console.log('[Domain B] betslip:clear event:', e.detail)
+      if (window.CrossTabMessenger) {
+        window.CrossTabMessenger.postToBridge({ type: 'clearBetslip', data: e.detail })
+      }
+    })
   })
 
   function initCrossTabMessenger() {
@@ -45,8 +74,9 @@
         console.log('[Domain B] Ping received')
       })
 
-      // Listen for addBet messages from the bridge
+      // Listen for betslip messages from the bridge
       if (window.CrossTabMessenger.onMessage) {
+        // addBet
         window.CrossTabMessenger.onMessage('addBet', (data: unknown) => {
           console.log('[Domain B] addBet message received:', data)
           const betData = data as { bet?: { id: string; name: string; odds: number; stake: number } }
@@ -56,6 +86,44 @@
             setTimeout(() => {
               status.value = ''
             }, 2000)
+          }
+        })
+
+        // updateStake
+        window.CrossTabMessenger.onMessage('updateStake', (data: unknown) => {
+          console.log('[Domain B] updateStake message received:', data)
+          const stakeData = data as { betId?: string; stake?: number }
+          if (betslipRef.value && stakeData?.betId && stakeData?.stake !== undefined) {
+            betslipRef.value.updateStake(stakeData.betId, stakeData.stake)
+            console.log('[Domain B] Stake updated from bridge')
+          }
+        })
+
+        // removeBet
+        window.CrossTabMessenger.onMessage('removeBet', (data: unknown) => {
+          console.log('[Domain B] removeBet message received:', data)
+          const removeData = data as { betId?: string }
+          if (betslipRef.value && removeData?.betId) {
+            betslipRef.value.removeBet(removeData.betId)
+            console.log('[Domain B] Bet removed from bridge')
+          }
+        })
+
+        // submitBetslip
+        window.CrossTabMessenger.onMessage('submitBetslip', (data: unknown) => {
+          console.log('[Domain B] submitBetslip message received:', data)
+          if (betslipRef.value) {
+            betslipRef.value.submitBetslip()
+            console.log('[Domain B] Betslip submitted from bridge')
+          }
+        })
+
+        // clearBetslip
+        window.CrossTabMessenger.onMessage('clearBetslip', (data: unknown) => {
+          console.log('[Domain B] clearBetslip message received:', data)
+          if (betslipRef.value) {
+            betslipRef.value.clearBetslip()
+            console.log('[Domain B] Betslip cleared from bridge')
           }
         })
 

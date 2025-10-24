@@ -23,7 +23,7 @@
                 window.parent.postMessage(msg, "*");
               },
             });
-          } else if (type === "addBet" || type === "customMessage") {
+          } else if (type === "addBet" || type === "updateStake" || type === "removeBet" || type === "submitBetslip" || type === "clearBetslip" || type === "customMessage") {
             // Handle custom messages - store and broadcast
             try {
               const messageKey = `bridge_${type}`;
