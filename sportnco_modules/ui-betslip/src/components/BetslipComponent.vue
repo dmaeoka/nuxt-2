@@ -38,13 +38,13 @@
 
       <div class="flex gap-2">
         <button
-          @click="submitBetslip"
+          @click="() => submitBetslip()"
           :disabled="betslip.bets.length === 0 || isSubmitting"
           class="flex-1 py-3 border-none rounded-md text-sm font-semibold cursor-pointer transition-all bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           {{ isSubmitting ? 'Submitting...' : 'Place Bet' }}
         </button>
-        <button @click="clearBetslip" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
+        <button @click="() => clearBetslip()" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
       </div>
     </div>
   </div>
@@ -93,7 +93,7 @@ const calculateTotals = () => {
 }
 
 // Add a bet to the betslip
-const addBet = (bet: Bet) => {
+const addBet = (bet: Bet, silent = false) => {
   try {
     // Check if bet already exists
     const existingBet = betslip.value.bets.find(b => b.id === bet.id)
@@ -121,7 +121,7 @@ const addBet = (bet: Bet) => {
 }
 
 // Update stake for a specific bet
-const updateStake = (betId: string, stake: number) => {
+const updateStake = (betId: string, stake: number, silent = false) => {
   try {
     const bet = betslip.value.bets.find(b => b.id === betId)
 
@@ -130,10 +130,12 @@ const updateStake = (betId: string, stake: number) => {
       calculateTotals()
       console.log('[Betslip] Stake updated for bet:', betId, 'new stake:', stake)
 
-      // Emit event to parent
-      window.dispatchEvent(new CustomEvent('betslip:updateStake', {
-        detail: { betId, stake }
-      }))
+      // Emit event to parent only if not silent
+      if (!silent) {
+        window.dispatchEvent(new CustomEvent('betslip:updateStake', {
+          detail: { betId, stake }
+        }))
+      }
     }
   } catch (error) {
     console.error('[Betslip] Failed to update stake:', error)
@@ -141,7 +143,7 @@ const updateStake = (betId: string, stake: number) => {
 }
 
 // Remove a bet from the betslip
-const removeBet = (betId: string) => {
+const removeBet = (betId: string, silent = false) => {
   try {
     const index = betslip.value.bets.findIndex(b => b.id === betId)
 
@@ -156,10 +158,12 @@ const removeBet = (betId: string) => {
           status.value = ''
         }, 2000)
 
-        // Emit event to parent
-        window.dispatchEvent(new CustomEvent('betslip:removeBet', {
-          detail: { betId }
-        }))
+        // Emit event to parent only if not silent
+        if (!silent) {
+          window.dispatchEvent(new CustomEvent('betslip:removeBet', {
+            detail: { betId }
+          }))
+        }
       }
     }
   } catch (error) {
@@ -168,7 +172,7 @@ const removeBet = (betId: string) => {
 }
 
 // Submit the betslip
-const submitBetslip = () => {
+const submitBetslip = (silent = false) => {
   if (betslip.value.bets.length === 0) return
 
   isSubmitting.value = true
@@ -180,10 +184,12 @@ const submitBetslip = () => {
     setTimeout(() => {
       status.value = `Betslip submitted successfully! Total stake: $${betslip.value.totalStake.toFixed(2)}, Potential win: $${betslip.value.potentialWin.toFixed(2)} ✅`
 
-      // Emit event to parent before clearing
-      window.dispatchEvent(new CustomEvent('betslip:submit', {
-        detail: { betslip: { ...betslip.value } }
-      }))
+      // Emit event to parent before clearing only if not silent
+      if (!silent) {
+        window.dispatchEvent(new CustomEvent('betslip:submit', {
+          detail: { betslip: { ...betslip.value } }
+        }))
+      }
 
       // Clear betslip after submission
       betslip.value.bets = []
@@ -207,7 +213,7 @@ const submitBetslip = () => {
 }
 
 // Clear all bets from the betslip
-const clearBetslip = () => {
+const clearBetslip = (silent = false) => {
   try {
     betslip.value.bets = []
     calculateTotals()
@@ -218,10 +224,12 @@ const clearBetslip = () => {
       status.value = ''
     }, 2000)
 
-    // Emit event to parent
-    window.dispatchEvent(new CustomEvent('betslip:clear', {
-      detail: {}
-    }))
+    // Emit event to parent only if not silent
+    if (!silent) {
+      window.dispatchEvent(new CustomEvent('betslip:clear', {
+        detail: {}
+      }))
+    }
   } catch (error) {
     console.error('[Betslip] Failed to clear betslip:', error)
   }

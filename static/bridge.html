@@ -4,59 +4,73 @@
     <script>
       "use strict";
       (() => {
+        let worker = null;
+        let workerPort = null;
         let fallbackPorts = [];
+        let useWorker = true;
+
+        // Try to initialize SharedWorker
+        try {
+          const workerUrl = new URL('/worker.js', window.location.origin).href;
+          worker = new SharedWorker(workerUrl);
+          workerPort = worker.port;
+
+          workerPort.onmessage = function(e) {
+            const { type, data } = e.data || {};
+            console.log('[Bridge] Worker message received:', { type, data });
+
+            // Broadcast to parent window
+            window.parent.postMessage({ type, data }, "*");
+          };
+
+          workerPort.onerror = function(error) {
+            console.error('[Bridge] Worker error:', error);
+            useWorker = false;
+          };
+
+          workerPort.start();
+          console.log('[Bridge] SharedWorker initialized');
+        } catch (err) {
+          console.warn('[Bridge] SharedWorker not available, using fallback mode:', err);
+          useWorker = false;
+        }
 
         window.addEventListener("message", (e) => {
           const { type, data } = e.data || {};
-          if (type === "ping") {
-            try {
-              const timestamp = Date.now().toString();
-              localStorage.setItem("ping", timestamp);
-            } catch (err) {
-              fallbackPorts.forEach((p) => {
-                p.postMessage({ type: "ping" });
-              });
-            }
-          } else if (type === "register-fallback") {
+
+          if (type === "register-fallback") {
             fallbackPorts.push({
               postMessage: (msg) => {
                 window.parent.postMessage(msg, "*");
               },
             });
-          } else if (type === "addBet" || type === "updateStake" || type === "removeBet" || type === "submitBetslip" || type === "clearBetslip" || type === "customMessage") {
-            // Handle custom messages - store and broadcast
-            try {
-              const messageKey = `bridge_${type}`;
-              const messageData = JSON.stringify({ type, data, timestamp: Date.now() });
-              localStorage.setItem(messageKey, messageData);
-            } catch (err) {
-              // Fallback mode - broadcast directly
+            return;
+          }
+
+          // Handle all message types
+          if (type) {
+            console.log('[Bridge] Received message from parent:', { type, data });
+
+            if (useWorker && workerPort) {
+              // Use SharedWorker
+              try {
+                workerPort.postMessage({ type, data });
+                console.log('[Bridge] Message sent to worker:', { type, data });
+              } catch (err) {
+                console.error('[Bridge] Failed to send to worker:', err);
+                // Fallback to direct broadcast
+                fallbackPorts.forEach((p) => {
+                  p.postMessage({ type, data });
+                });
+              }
+            } else {
+              // Fallback mode - broadcast directly to registered ports
               fallbackPorts.forEach((p) => {
                 p.postMessage({ type, data });
               });
             }
           }
         });
-
-        try {
-          window.addEventListener("storage", (e) => {
-            if (e.key === "ping") {
-              window.parent.postMessage({ type: "ping" }, "*");
-            } else if (e.key && e.key.startsWith("bridge_")) {
-              // Broadcast custom messages to all tabs
-              try {
-                const messageData = JSON.parse(e.newValue);
-                window.parent.postMessage(messageData, "*");
-              } catch (err) {
-                console.error("[Bridge] Failed to parse message:", err);
-              }
-            }
-          });
-          localStorage.setItem("_test", "1");
-          localStorage.removeItem("_test");
-        } catch (err) {
-          console.warn("[Bridge] localStorage blocked, fallback mode only. Error:", err);
-        }
       })();
     </script>
   </body>

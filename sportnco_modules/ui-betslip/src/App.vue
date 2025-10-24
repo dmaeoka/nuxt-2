@@ -81,7 +81,7 @@
           console.log('[Domain B] addBet message received:', data)
           const betData = data as { bet?: { id: string; name: string; odds: number; stake: number } }
           if (betslipRef.value && betData?.bet) {
-            betslipRef.value.addBet(betData.bet)
+            betslipRef.value.addBet(betData.bet, true) // silent = true to prevent re-broadcast
             status.value = `Added ${betData.bet.name} from bridge! 🎯`
             setTimeout(() => {
               status.value = ''
@@ -94,7 +94,7 @@
           console.log('[Domain B] updateStake message received:', data)
           const stakeData = data as { betId?: string; stake?: number }
           if (betslipRef.value && stakeData?.betId && stakeData?.stake !== undefined) {
-            betslipRef.value.updateStake(stakeData.betId, stakeData.stake)
+            betslipRef.value.updateStake(stakeData.betId, stakeData.stake, true) // silent = true
             console.log('[Domain B] Stake updated from bridge')
           }
         })
@@ -104,7 +104,7 @@
           console.log('[Domain B] removeBet message received:', data)
           const removeData = data as { betId?: string }
           if (betslipRef.value && removeData?.betId) {
-            betslipRef.value.removeBet(removeData.betId)
+            betslipRef.value.removeBet(removeData.betId, true) // silent = true
             console.log('[Domain B] Bet removed from bridge')
           }
         })
@@ -113,7 +113,7 @@
         window.CrossTabMessenger.onMessage('submitBetslip', (data: unknown) => {
           console.log('[Domain B] submitBetslip message received:', data)
           if (betslipRef.value) {
-            betslipRef.value.submitBetslip()
+            betslipRef.value.submitBetslip(true) // silent = true
             console.log('[Domain B] Betslip submitted from bridge')
           }
         })
@@ -122,7 +122,7 @@
         window.CrossTabMessenger.onMessage('clearBetslip', (data: unknown) => {
           console.log('[Domain B] clearBetslip message received:', data)
           if (betslipRef.value) {
-            betslipRef.value.clearBetslip()
+            betslipRef.value.clearBetslip(true) // silent = true to prevent infinite loop
             console.log('[Domain B] Betslip cleared from bridge')
           }
         })

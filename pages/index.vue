@@ -53,7 +53,7 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.addBet && data?.bet) {
-          betslipComponent.addBet(data.bet);
+          betslipComponent.addBet(data.bet, true); // silent = true to prevent re-broadcast
           console.log('[Index Page] Bet added to local betslip from bridge:', data.bet);
         }
       });
@@ -64,7 +64,7 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.updateStake && data?.betId) {
-          betslipComponent.updateStake(data.betId, data.stake);
+          betslipComponent.updateStake(data.betId, data.stake, true); // silent = true
           console.log('[Index Page] Stake updated in local betslip from bridge:', data);
         }
       });
@@ -75,7 +75,7 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.removeBet && data?.betId) {
-          betslipComponent.removeBet(data.betId);
+          betslipComponent.removeBet(data.betId, true); // silent = true
           console.log('[Index Page] Bet removed from local betslip from bridge:', data);
         }
       });
@@ -86,7 +86,7 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.submitBetslip) {
-          betslipComponent.submitBetslip();
+          betslipComponent.submitBetslip(true); // silent = true
           console.log('[Index Page] Betslip submitted from bridge');
         }
       });
@@ -97,7 +97,7 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.clearBetslip) {
-          betslipComponent.clearBetslip();
+          betslipComponent.clearBetslip(true); // silent = true to prevent infinite loop
           console.log('[Index Page] Betslip cleared from bridge');
         }
       });
