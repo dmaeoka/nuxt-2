@@ -3,6 +3,11 @@
     <div class="max-w-4xl mx-auto">
       <h1 class="text-3xl font-bold mb-6 text-purple-700">Domain B (Receiver)</h1>
 
+      <!-- Status Display -->
+      <div v-if="status" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <p class="font-bold">{{ status }}</p>
+      </div>
+
       <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-xl font-semibold mb-4">Betslip Development Preview</h2>
         <BetslipComponent ref="betslipRef" :api-url="apiUrl" :ping="receivedMessage" />
@@ -29,9 +34,10 @@
 
   onMounted(() => {
     // Load CrossTabMessenger script dynamically
+    const bridgeServer = 'http://192.168.112.156:5000'
     const script = document.createElement('script')
-    script.src = 'http://192.168.112.156:5000/CrossTabMessenger.js'
-    script.onload = () => initCrossTabMessenger()
+    script.src = `${bridgeServer}/CrossTabMessenger.js`
+    script.onload = () => initCrossTabMessenger(bridgeServer)
     document.body.appendChild(script)
 
     // Listen for betslip component events and broadcast through bridge
@@ -64,14 +70,20 @@
     })
   })
 
-  function initCrossTabMessenger() {
+  function initCrossTabMessenger(bridgeServer: string) {
     if (window.CrossTabMessenger) {
-      window.CrossTabMessenger.init('http://192.168.112.156:5000/bridge.html')
+      window.CrossTabMessenger.init(`${bridgeServer}/bridge.html`)
+      console.log('[Domain B] Bridge initialized with server:', bridgeServer)
 
       // Listen for ping messages
       window.CrossTabMessenger.onPing(() => {
-        status.value = 'Ping received'
+        status.value = 'Ping received from Domain A! 📨'
         console.log('[Domain B] Ping received')
+
+        // Auto-clear status after 3 seconds
+        setTimeout(() => {
+          status.value = ''
+        }, 3000)
       })
 
       // Listen for betslip messages from the bridge
@@ -85,7 +97,7 @@
             status.value = `Added ${betData.bet.name} from bridge! 🎯`
             setTimeout(() => {
               status.value = ''
-            }, 2000)
+            }, 6000)
           }
         })
 
@@ -94,7 +106,8 @@
           console.log('[Domain B] updateStake message received:', data)
           const stakeData = data as { betId?: string; stake?: number }
           if (betslipRef.value && stakeData?.betId && stakeData?.stake !== undefined) {
-            betslipRef.value.updateStake(stakeData.betId, stakeData.stake)
+            // Pass skipEmit=true to prevent circular loop
+            betslipRef.value.updateStake(stakeData.betId, stakeData.stake, true)
             console.log('[Domain B] Stake updated from bridge')
           }
         })
@@ -104,7 +117,8 @@
           console.log('[Domain B] removeBet message received:', data)
           const removeData = data as { betId?: string }
           if (betslipRef.value && removeData?.betId) {
-            betslipRef.value.removeBet(removeData.betId)
+            // Pass skipEmit=true to prevent circular loop
+            betslipRef.value.removeBet(removeData.betId, true)
             console.log('[Domain B] Bet removed from bridge')
           }
         })
@@ -122,7 +136,8 @@
         window.CrossTabMessenger.onMessage('clearBetslip', (data: unknown) => {
           console.log('[Domain B] clearBetslip message received:', data)
           if (betslipRef.value) {
-            betslipRef.value.clearBetslip()
+            // Pass skipEmit=true to prevent circular loop
+            betslipRef.value.clearBetslip(true)
             console.log('[Domain B] Betslip cleared from bridge')
           }
         })

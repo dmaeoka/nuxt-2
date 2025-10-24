@@ -5,15 +5,22 @@
     <div class="layout">
       <div class="bets-section">
         <h2>Available Bets</h2>
+
+        <!-- Ping Status Display -->
+        <div v-if="pingStatus" class="status-message">
+          {{ pingStatus }}
+        </div>
+
         <div class="bet-card" v-for="bet in availableBets" :key="bet.id">
           <div class="bet-details">
             <strong>{{ bet.name }}</strong>
             <span class="odds">Odds: {{ bet.odds }}</span>
           </div>
-          <button @click="addToBetslip(bet)" class="add-btn">
+          <button @click="addToBetslip(bet)" class="btn">
             Add to Betslip
           </button>
         </div>
+        <button class="btn ping-btn" @click="sendPing">Send Ping to Domain B</button>
       </div>
       <div class="betslip-section">
         <client-only>
@@ -64,7 +71,8 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.updateStake && data?.betId) {
-          betslipComponent.updateStake(data.betId, data.stake);
+          // Pass skipEmit=true to prevent circular loop
+          betslipComponent.updateStake(data.betId, data.stake, true);
           console.log('[Index Page] Stake updated in local betslip from bridge:', data);
         }
       });
@@ -75,7 +83,8 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.removeBet && data?.betId) {
-          betslipComponent.removeBet(data.betId);
+          // Pass skipEmit=true to prevent circular loop
+          betslipComponent.removeBet(data.betId, true);
           console.log('[Index Page] Bet removed from local betslip from bridge:', data);
         }
       });
@@ -97,7 +106,8 @@ export default {
         const betslipComponent = this.$refs.betslipRef;
 
         if (betslipComponent && betslipComponent.clearBetslip) {
-          betslipComponent.clearBetslip();
+          // Pass skipEmit=true to prevent circular loop
+          betslipComponent.clearBetslip(true);
           console.log('[Index Page] Betslip cleared from bridge');
         }
       });
@@ -146,7 +156,7 @@ export default {
         id: bet.id,
         name: bet.name,
         odds: bet.odds,
-        stake: 10 // Default stake
+        stake: 10
       }
 
       // Add to local betslip immediately
@@ -164,6 +174,26 @@ export default {
         console.log('[Index Page] Bet sent through bridge:', betData)
       } else {
         console.warn('[Index Page] SncWorker not available')
+      }
+    },
+    sendPing() {
+      if (this.$SncWorker) {
+        console.log('[Index Page] Sending ping to other tabs/domains')
+        this.$SncWorker.ping()
+
+        // Show feedback
+        this.pingStatus = 'Ping sent! 🚀'
+        console.log('[Index Page] Ping sent successfully')
+
+        // Clear status after 3 seconds
+        setTimeout(() => {
+          this.pingStatus = ''
+        }, 3000)
+      } else {
+        this.pingStatus = 'CrossTabMessenger not available ❌'
+        setTimeout(() => {
+          this.pingStatus = ''
+        }, 3000)
       }
     },
   }
@@ -219,7 +249,7 @@ h1 {
   font-size: 14px;
 }
 
-.add-btn {
+.btn {
   padding: 8px 16px;
   background: #3b82f6;
   color: white;
@@ -229,8 +259,40 @@ h1 {
   font-weight: 500;
 }
 
-.add-btn:hover {
+.btn:hover {
   background: #2563eb;
+}
+
+.ping-btn {
+  background: #10b981;
+  margin-top: 12px;
+}
+
+.ping-btn:hover {
+  background: #059669;
+}
+
+.status-message {
+  padding: 12px;
+  background: #dbeafe;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #1e40af;
+  font-weight: 500;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 </style>

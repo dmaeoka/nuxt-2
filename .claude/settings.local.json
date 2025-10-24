@@ -63,7 +63,8 @@
       "Bash(test:*)",
       "Bash(corepack enable:*)",
       "Bash(corepack install:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run build:vue-plugin:*)"
     ],
     "deny": [],
     "ask": []

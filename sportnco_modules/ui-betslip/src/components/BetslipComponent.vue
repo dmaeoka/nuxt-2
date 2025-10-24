@@ -21,7 +21,7 @@
             min="0"
             step="0.01"
           />
-          <button @click="removeBet(bet.id)" class="w-8 h-8 border-none bg-red-500 text-white rounded cursor-pointer text-xl leading-none p-0 hover:bg-red-700 transition-colors">×</button>
+          <button @click="() => removeBet(bet.id)" class="w-8 h-8 border-none bg-red-500 text-white rounded cursor-pointer text-xl leading-none p-0 hover:bg-red-700 transition-colors">×</button>
         </div>
       </div>
 
@@ -44,7 +44,7 @@
         >
           {{ isSubmitting ? 'Submitting...' : 'Place Bet' }}
         </button>
-        <button @click="clearBetslip" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
+        <button @click="() => clearBetslip()" class="flex-1 py-3 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer transition-all bg-white text-gray-600 hover:bg-gray-50">Clear All</button>
       </div>
     </div>
   </div>
@@ -121,7 +121,7 @@ const addBet = (bet: Bet) => {
 }
 
 // Update stake for a specific bet
-const updateStake = (betId: string, stake: number) => {
+const updateStake = (betId: string, stake: number, skipEmit: boolean = false) => {
   try {
     const bet = betslip.value.bets.find(b => b.id === betId)
 
@@ -130,10 +130,12 @@ const updateStake = (betId: string, stake: number) => {
       calculateTotals()
       console.log('[Betslip] Stake updated for bet:', betId, 'new stake:', stake)
 
-      // Emit event to parent
-      window.dispatchEvent(new CustomEvent('betslip:updateStake', {
-        detail: { betId, stake }
-      }))
+      // Only emit event if not from external source (to prevent circular loop)
+      if (!skipEmit) {
+        window.dispatchEvent(new CustomEvent('betslip:updateStake', {
+          detail: { betId, stake }
+        }))
+      }
     }
   } catch (error) {
     console.error('[Betslip] Failed to update stake:', error)
@@ -141,7 +143,7 @@ const updateStake = (betId: string, stake: number) => {
 }
 
 // Remove a bet from the betslip
-const removeBet = (betId: string) => {
+const removeBet = (betId: string, skipEmit: boolean = false) => {
   try {
     const index = betslip.value.bets.findIndex(b => b.id === betId)
 
@@ -156,10 +158,12 @@ const removeBet = (betId: string) => {
           status.value = ''
         }, 2000)
 
-        // Emit event to parent
-        window.dispatchEvent(new CustomEvent('betslip:removeBet', {
-          detail: { betId }
-        }))
+        // Only emit event if not from external source (to prevent circular loop)
+        if (!skipEmit) {
+          window.dispatchEvent(new CustomEvent('betslip:removeBet', {
+            detail: { betId }
+          }))
+        }
       }
     }
   } catch (error) {
@@ -207,7 +211,7 @@ const submitBetslip = () => {
 }
 
 // Clear all bets from the betslip
-const clearBetslip = () => {
+const clearBetslip = (skipEmit: boolean = false) => {
   try {
     betslip.value.bets = []
     calculateTotals()
@@ -218,10 +222,12 @@ const clearBetslip = () => {
       status.value = ''
     }, 2000)
 
-    // Emit event to parent
-    window.dispatchEvent(new CustomEvent('betslip:clear', {
-      detail: {}
-    }))
+    // Only emit event if not from external source (to prevent circular loop)
+    if (!skipEmit) {
+      window.dispatchEvent(new CustomEvent('betslip:clear', {
+        detail: {}
+      }))
+    }
   } catch (error) {
     console.error('[Betslip] Failed to clear betslip:', error)
   }
